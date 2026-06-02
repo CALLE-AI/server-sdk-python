@@ -21,6 +21,7 @@ Run these checks before publishing:
 
 ```bash
 uv sync --all-groups
+uv run python scripts/verify_openapi_contract.py
 uv run pytest -q
 uv run ruff check .
 uv run mypy src/calle
