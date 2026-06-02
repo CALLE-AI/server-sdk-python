@@ -38,7 +38,8 @@ imports `CalleClient`.
 2. Confirm GitHub Actions secret `TEST_PYPI_API_TOKEN` is configured, unless the
    package has been moved to TestPyPI Trusted Publishing.
 3. Open the `Publish Python package` workflow in GitHub Actions.
-4. Run the workflow from `main` with repository `testpypi`.
+4. Run the workflow from `main` with repository `testpypi` and the selected
+   release identity.
 5. Confirm the workflow completes the post-publish install smoke test.
 
 Manual verification:
@@ -61,7 +62,8 @@ least one backend integration.
    immutable.
 2. Confirm GitHub Actions secret `PYPI_API_TOKEN` is configured, unless the
    package has been moved to PyPI Trusted Publishing.
-3. Run the `Publish Python package` workflow from `main` with repository `pypi`.
+3. Run the `Publish Python package` workflow from `main` with repository `pypi`
+   and the selected release identity.
 4. Confirm the workflow completes the post-publish install smoke test.
 
 ## Registry identity notes
@@ -72,4 +74,10 @@ release. Configure a pending publisher for:
 - Owner: `CALLE-AI`
 - Repository: `server-sdk-python`
 - Workflow filename: `publish-python.yml`
+- Environment name for TestPyPI: `testpypi`
+- Environment name for PyPI: `pypi`
 - Project name: `calle-ai`
+
+When using Trusted Publishing, run the workflow with auth
+`trusted-publishing`. When using API tokens, run it with auth `token` and
+configure `TEST_PYPI_API_TOKEN` or `PYPI_API_TOKEN`.

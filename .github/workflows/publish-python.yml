@@ -11,10 +11,23 @@ on:
         options:
           - testpypi
           - pypi
+      auth:
+        description: Release identity to use.
+        required: true
+        default: token
+        type: choice
+        options:
+          - token
+          - trusted-publishing
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.repository }}
+
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout
@@ -51,7 +64,8 @@ jobs:
       - name: Check distribution metadata
         run: uvx twine check dist/*
 
-      - name: Publish
+      - name: Publish with package index token
+        if: inputs.auth == 'token'
         env:
           PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
           TEST_PYPI_API_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
@@ -73,6 +87,16 @@ jobs:
 
           TWINE_USERNAME="__token__" TWINE_PASSWORD="$token" \
             uvx twine upload --repository-url "$repository_url" dist/*
+
+      - name: Publish to TestPyPI with Trusted Publishing
+        if: inputs.auth == 'trusted-publishing' && inputs.repository == 'testpypi'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+
+      - name: Publish to PyPI with Trusted Publishing
+        if: inputs.auth == 'trusted-publishing' && inputs.repository == 'pypi'
+        uses: pypa/gh-action-pypi-publish@release/v1
 
       - name: Verify published package
         run: |
