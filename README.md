@@ -89,6 +89,9 @@ event = client.webhooks.unwrap(
 This repository publishes the Python distribution `calle-ai`. Application code
 imports it as `calle`.
 
+See [RELEASE.md](./RELEASE.md) for the release checklist, GitHub Actions
+workflow, and post-publish install smoke test.
+
 Prerequisites:
 
 - Create a TestPyPI API token and add it as the GitHub Actions secret
@@ -114,3 +117,9 @@ python -c 'from calle import CalleClient; print(CalleClient)'
 
 Use repository `pypi` only after the TestPyPI package has been installed and
 tested.
+
+## Project Documents
+
+- [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [SECURITY.md](./SECURITY.md)
+- [RELEASE.md](./RELEASE.md)
