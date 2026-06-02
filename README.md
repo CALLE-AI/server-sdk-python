@@ -19,6 +19,32 @@ pip install --index-url https://test.pypi.org/simple/ \
   calle-ai==0.1.0b1
 ```
 
+## Examples
+
+Set the API key before running call examples:
+
+```bash
+export CALLE_API_KEY="calle_test_key"
+export CALLE_BASE_URL="https://api.example.com"
+export CALLE_EXAMPLE_PHONE="+14155550100"
+```
+
+Run the create-and-wait example from a local checkout:
+
+```bash
+uv run python examples/create_and_wait.py
+```
+
+Run the webhook receiver example:
+
+```bash
+export CALLE_WEBHOOK_SECRET="whsec_test_key"
+uv run python examples/webhook_server.py
+```
+
+The webhook receiver listens on `POST /calle/webhook` and verifies
+`CALL-E-Timestamp` and `CALL-E-Signature` against the raw request body.
+
 ## Quickstart
 
 ```python
