@@ -64,6 +64,28 @@ jobs:
       - name: Check distribution metadata
         run: uvx twine check dist/*
 
+      - name: Smoke test wheel install
+        run: |
+          set -euo pipefail
+
+          smoke_dir="$(mktemp -d)"
+          python -m venv "$smoke_dir/.venv"
+          . "$smoke_dir/.venv/bin/activate"
+          python -m pip install --upgrade pip
+          python -m pip install dist/*.whl
+          python -c 'from calle import CalleClient; print(CalleClient)'
+
+      - name: Smoke test source distribution install
+        run: |
+          set -euo pipefail
+
+          smoke_dir="$(mktemp -d)"
+          python -m venv "$smoke_dir/.venv"
+          . "$smoke_dir/.venv/bin/activate"
+          python -m pip install --upgrade pip
+          python -m pip install dist/*.tar.gz
+          python -c 'from calle import CalleClient; print(CalleClient)'
+
       - name: Publish with package index token
         if: inputs.auth == 'token'
         env:

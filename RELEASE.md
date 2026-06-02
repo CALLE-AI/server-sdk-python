@@ -27,6 +27,15 @@ uv run mypy src/calle
 uv run python -m py_compile examples/create_and_wait.py examples/webhook_server.py
 uv build
 uvx twine check dist/*
+python -m venv /tmp/calle-python-sdk-smoke
+. /tmp/calle-python-sdk-smoke/bin/activate
+python -m pip install dist/*.whl
+python -c 'from calle import CalleClient; print(CalleClient)'
+deactivate
+python -m venv /tmp/calle-python-sdk-sdist-smoke
+. /tmp/calle-python-sdk-sdist-smoke/bin/activate
+python -m pip install dist/*.tar.gz
+python -c 'from calle import CalleClient; print(CalleClient)'
 ```
 
 The CI workflow also installs the built wheel in a fresh virtual environment and
