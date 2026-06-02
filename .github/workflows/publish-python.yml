@@ -1,0 +1,84 @@
+name: Publish Python package
+
+on:
+  workflow_dispatch:
+    inputs:
+      repository:
+        description: Python package index to publish.
+        required: true
+        default: testpypi
+        type: choice
+        options:
+          - testpypi
+          - pypi
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Run tests
+        run: uv run pytest -q
+
+      - name: Ruff
+        run: uv run ruff check .
+
+      - name: mypy
+        run: uv run mypy src/calle
+
+      - name: Build package
+        run: uv build
+
+      - name: Check distribution metadata
+        run: uvx twine check dist/*
+
+      - name: Publish
+        env:
+          PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+          TEST_PYPI_API_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [ "${{ inputs.repository }}" = "pypi" ]; then
+            token="$PYPI_API_TOKEN"
+            repository_url="https://upload.pypi.org/legacy/"
+          else
+            token="$TEST_PYPI_API_TOKEN"
+            repository_url="https://test.pypi.org/legacy/"
+          fi
+
+          if [ -z "$token" ]; then
+            echo "::error::Missing package index token for ${{ inputs.repository }}."
+            exit 1
+          fi
+
+          TWINE_USERNAME="__token__" TWINE_PASSWORD="$token" \
+            uvx twine upload --repository-url "$repository_url" dist/*
+
+      - name: Verify published package
+        run: |
+          set -euo pipefail
+
+          if [ "${{ inputs.repository }}" = "pypi" ]; then
+            url="https://pypi.org/pypi/calle-ai/json"
+          else
+            url="https://test.pypi.org/pypi/calle-ai/json"
+          fi
+
+          curl --fail --silent --show-error "$url" >/dev/null

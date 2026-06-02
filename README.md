@@ -57,3 +57,34 @@ event = client.webhooks.unwrap(
     secret=os.environ["CALLE_WEBHOOK_SECRET"],
 )
 ```
+
+## Release
+
+This repository publishes the Python distribution `calle-ai`. Application code
+imports it as `calle`.
+
+Prerequisites:
+
+- Create a TestPyPI API token and add it as the GitHub Actions secret
+  `TEST_PYPI_API_TOKEN`.
+- Create a PyPI API token and add it as the GitHub Actions secret
+  `PYPI_API_TOKEN`.
+- Keep the package version in `pyproject.toml` unique before each publish.
+
+Manual TestPyPI rehearsal:
+
+1. Open the `Publish Python package` GitHub Actions workflow.
+2. Run it from `main` with repository `testpypi`.
+3. Verify install in a temporary environment:
+
+```bash
+python -m venv .venv
+. .venv/bin/activate
+pip install --index-url https://test.pypi.org/simple/ \
+  --extra-index-url https://pypi.org/simple \
+  calle-ai==0.1.0b1
+python -c 'from calle import CalleClient; print(CalleClient)'
+```
+
+Use repository `pypi` only after the TestPyPI package has been installed and
+tested.
