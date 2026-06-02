@@ -5,18 +5,40 @@ Python server SDK for the CALL-E Developer API.
 Use this SDK from backend services, workers, and other trusted server
 environments. Do not expose CALL-E API keys in browser code.
 
+## Documentation
+
+- Developer docs: <http://8.222.221.91:5204/calle-docs-site/>
+- SDK guide: <http://8.222.221.91:5204/calle-docs-site/#/sdks>
+- API Reference: <http://8.222.221.91:5204/calle-docs-site/#/api-reference>
+- Webhooks: <http://8.222.221.91:5204/calle-docs-site/#/webhooks>
+- Changelog: <http://8.222.221.91:5204/calle-docs-site/#/changelog>
+
 ## Install
+
+The distribution name is planned for the first beta release, but it has not
+been published to TestPyPI or PyPI yet.
+
+After the package is published to PyPI:
 
 ```bash
 pip install calle-ai
 ```
 
-For the first TestPyPI rehearsal:
+For the first TestPyPI rehearsal after publishing:
 
 ```bash
 pip install --index-url https://test.pypi.org/simple/ \
   --extra-index-url https://pypi.org/simple \
   calle-ai==0.1.0b1
+```
+
+Before the first registry publish, use a local checkout for development and
+package smoke tests:
+
+```bash
+uv sync --all-groups
+uv run pytest -q
+uv build
 ```
 
 ## Examples
