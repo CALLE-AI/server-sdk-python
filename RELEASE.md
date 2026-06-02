@@ -69,7 +69,11 @@ least one backend integration.
 ## Registry identity notes
 
 PyPI Trusted Publishing is preferred once the repository is ready for public
-release. Configure a pending publisher for:
+release. Because `calle-ai` has not been published yet, configure a pending
+publisher first. TestPyPI and PyPI are separate registries, so configure the
+publisher separately in each registry you plan to use.
+
+Configure the pending publisher for:
 
 - Owner: `CALLE-AI`
 - Repository: `server-sdk-python`
@@ -81,3 +85,7 @@ release. Configure a pending publisher for:
 When using Trusted Publishing, run the workflow with auth
 `trusted-publishing`. When using API tokens, run it with auth `token` and
 configure `TEST_PYPI_API_TOKEN` or `PYPI_API_TOKEN`.
+
+If the package already exists on PyPI later, use the project's Publishing page
+to add or update the trusted publisher with the same owner, repository, workflow
+filename, and environment.
