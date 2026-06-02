@@ -36,10 +36,7 @@ Before the first registry publish, use a local checkout for development and
 package smoke tests:
 
 ```bash
-uv sync --all-groups
-uv run python scripts/verify_openapi_contract.py
-uv run pytest -q
-uv build
+bash scripts/validate.sh
 ```
 
 ## Examples

@@ -24,48 +24,5 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Install dependencies
-        run: uv sync --all-groups
-
-      - name: Verify OpenAPI contract
-        run: uv run python scripts/verify_openapi_contract.py
-
-      - name: Run tests
-        run: uv run pytest -q
-
-      - name: Ruff
-        run: uv run ruff check .
-
-      - name: mypy
-        run: uv run mypy src/calle
-
-      - name: Compile examples
-        run: uv run python -m py_compile examples/create_and_wait.py examples/webhook_server.py
-
-      - name: Build package
-        run: uv build
-
-      - name: Check distribution metadata
-        run: uvx twine check dist/*
-
-      - name: Smoke test wheel install
-        run: |
-          set -euo pipefail
-
-          smoke_dir="$(mktemp -d)"
-          python -m venv "$smoke_dir/.venv"
-          . "$smoke_dir/.venv/bin/activate"
-          python -m pip install --upgrade pip
-          python -m pip install dist/*.whl
-          python -c 'from calle import CalleClient; print(CalleClient)'
-
-      - name: Smoke test source distribution install
-        run: |
-          set -euo pipefail
-
-          smoke_dir="$(mktemp -d)"
-          python -m venv "$smoke_dir/.venv"
-          . "$smoke_dir/.venv/bin/activate"
-          python -m pip install --upgrade pip
-          python -m pip install dist/*.tar.gz
-          python -c 'from calle import CalleClient; print(CalleClient)'
+      - name: Run validation
+        run: bash scripts/validate.sh

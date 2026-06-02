@@ -6,13 +6,7 @@ trusted backend services, workers, and automation systems.
 ## Development setup
 
 ```bash
-uv sync --all-groups
-uv run pytest -q
-uv run ruff check .
-uv run mypy src/calle
-uv run python -m py_compile examples/create_and_wait.py examples/webhook_server.py
-uv build
-uvx twine check dist/*
+bash scripts/validate.sh
 ```
 
 ## Local examples
