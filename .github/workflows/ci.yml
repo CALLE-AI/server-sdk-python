@@ -36,5 +36,11 @@ jobs:
       - name: mypy
         run: uv run mypy src/calle
 
+      - name: Compile examples
+        run: uv run python -m py_compile examples/create_and_wait.py examples/webhook_server.py
+
       - name: Build package
         run: uv build
+
+      - name: Check distribution metadata
+        run: uvx twine check dist/*
