@@ -9,7 +9,7 @@ class CalleClient:
         self,
         *,
         api_key: str,
-        base_url: str = "https://api.example.com",
+        base_url: str = "https://api.heycall-e.com",
         timeout: float = 30.0,
         http_client: httpx.Client | None = None,
     ) -> None:

@@ -7,7 +7,7 @@ from calle import CalleClient
 def main() -> None:
     client = CalleClient(
         api_key=os.environ.get("CALLE_API_KEY", "calle_dev_example"),
-        base_url=os.environ.get("CALLE_BASE_URL", "https://api.example.com"),
+        base_url=os.environ.get("CALLE_BASE_URL", "https://api.heycall-e.com"),
     )
 
     call = client.calls.create_and_wait(

@@ -15,25 +15,19 @@ environments. Do not expose CALL-E API keys in browser code.
 
 ## Install
 
-The distribution name is planned for the first beta release, but it has not
-been published to TestPyPI or PyPI yet.
-
-After the package is published to PyPI:
+Install the stable package from PyPI:
 
 ```bash
 pip install calle-ai
 ```
 
-For the first TestPyPI rehearsal after publishing:
+Pin the first stable release when your deployment process requires exact package reproducibility:
 
 ```bash
-pip install --index-url https://test.pypi.org/simple/ \
-  --extra-index-url https://pypi.org/simple \
-  calle-ai==0.1.0b1
+pip install calle-ai==0.1.0
 ```
 
-Before the first registry publish, use a local checkout for development and
-package smoke tests:
+Use a local checkout for development and package smoke tests:
 
 ```bash
 bash scripts/validate.sh
@@ -45,7 +39,7 @@ Set the API key before running call examples:
 
 ```bash
 export CALLE_API_KEY="calle_test_key"
-export CALLE_BASE_URL="https://api.example.com"
+export CALLE_BASE_URL="https://api.heycall-e.com"
 export CALLE_EXAMPLE_PHONE="+14155550100"
 ```
 
@@ -73,7 +67,7 @@ from calle import CalleClient
 
 client = CalleClient(
     api_key=os.environ["CALLE_API_KEY"],
-    base_url="https://api.example.com",
+    base_url="https://api.heycall-e.com",
 )
 
 call = client.calls.create_and_wait(
@@ -114,29 +108,23 @@ workflow, and post-publish install smoke test.
 
 Prerequisites:
 
-- Create a TestPyPI API token and add it as the GitHub Actions secret
-  `TEST_PYPI_API_TOKEN`.
-- Create a PyPI API token and add it as the GitHub Actions secret
-  `PYPI_API_TOKEN`.
+- Create a PyPI API token and add it to this repository as the GitHub Actions secret `PYPI_API_TOKEN`.
 - Keep the package version in `pyproject.toml` unique before each publish.
 
-Manual TestPyPI rehearsal:
+Manual stable PyPI publish:
 
 1. Open the `Publish Python package` GitHub Actions workflow.
-2. Run it from `main` with repository `testpypi`.
+2. Run it from `main` with repository `pypi` and auth `token`.
 3. Verify install in a temporary environment:
 
 ```bash
 python -m venv .venv
 . .venv/bin/activate
-pip install --index-url https://test.pypi.org/simple/ \
-  --extra-index-url https://pypi.org/simple \
-  calle-ai==0.1.0b1
+pip install calle-ai==0.1.0
 python -c 'from calle import CalleClient; print(CalleClient)'
 ```
 
-Use repository `pypi` only after the TestPyPI package has been installed and
-tested.
+The first stable version is `0.1.0`. Do not reuse a previously published PyPI version.
 
 ## Project Documents
 

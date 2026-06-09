@@ -1,19 +1,22 @@
 # Release
 
-This repository publishes the Python distribution `calle-ai`. Application code
-imports it as `calle`.
+This repository publishes the Python distribution `calle-ai`. Application code imports it as `calle`.
 
 ## Current status
 
-The package source, CI, and publish workflow are ready. The first registry
-publish still requires one of these release identities:
+TestPyPI has the prerelease package:
 
-- GitHub Actions secret `TEST_PYPI_API_TOKEN` for TestPyPI,
-- GitHub Actions secret `PYPI_API_TOKEN` for PyPI, or
-- PyPI/TestPyPI Trusted Publishing configured for this repository and workflow.
+```text
+calle-ai==0.1.0b1
+```
 
-Until the first beta is published, use a local checkout for examples and
-integration testing.
+The first production PyPI release version is:
+
+```text
+calle-ai==0.1.0
+```
+
+For this release, use token-based PyPI publishing with the GitHub Actions secret `PYPI_API_TOKEN`.
 
 ## Release gates
 
@@ -23,64 +26,51 @@ Run these checks before publishing:
 bash scripts/validate.sh
 ```
 
-The validation script checks the OpenAPI contract, tests, lint, types, examples,
-distribution metadata, wheel install, source distribution install, and imports
-`CalleClient` from fresh virtual environments.
+The validation script checks the OpenAPI contract, tests, lint, types, examples, distribution metadata, wheel install, source distribution install, and imports `CalleClient` from fresh virtual environments.
 
-## TestPyPI rehearsal
+## Stable PyPI publish
 
-1. Confirm `pyproject.toml` has a unique beta version, for example `0.1.0b1`.
-2. Confirm GitHub Actions secret `TEST_PYPI_API_TOKEN` is configured, unless the
-   package has been moved to TestPyPI Trusted Publishing.
+1. Confirm `pyproject.toml` has a unique stable version. The first stable version is `0.1.0`.
+2. Confirm GitHub Actions secret `PYPI_API_TOKEN` is configured.
 3. Open the `Publish Python package` workflow in GitHub Actions.
-4. Run the workflow from `main` with repository `testpypi` and the selected
-   release identity.
+4. Run the workflow from `main` with repository `pypi` and auth `token`.
 5. Confirm the workflow completes the post-publish install smoke test.
 
 Manual verification:
 
 ```bash
-python -m venv .venv
-. .venv/bin/activate
-pip install --index-url https://test.pypi.org/simple/ \
-  --extra-index-url https://pypi.org/simple \
-  calle-ai==0.1.0b1
+curl --fail --silent --show-error https://pypi.org/pypi/calle-ai/json >/dev/null
+
+tmpdir="$(mktemp -d)"
+python -m venv "$tmpdir/.venv"
+. "$tmpdir/.venv/bin/activate"
+python -m pip install --upgrade pip
+python -m pip install calle-ai==0.1.0
 python -c 'from calle import CalleClient; print(CalleClient)'
 ```
 
-## PyPI publish
+## Version rules
 
-Use PyPI only after the TestPyPI package has been installed and tested in at
-least one backend integration.
+- Patch releases fix SDK wrapper bugs, type issues, packaging metadata, README examples, or distribution issues without changing public API behavior.
+- Minor releases add backward-compatible API fields, endpoints, or SDK helpers.
+- Major releases make breaking public API, method signature, stable error, or webhook signature contract changes.
 
-1. Increment the version in `pyproject.toml`. PyPI package versions are
-   immutable.
-2. Confirm GitHub Actions secret `PYPI_API_TOKEN` is configured, unless the
-   package has been moved to PyPI Trusted Publishing.
-3. Run the `Publish Python package` workflow from `main` with repository `pypi`
-   and the selected release identity.
-4. Confirm the workflow completes the post-publish install smoke test.
+Keep TypeScript, Python, OpenAPI, and public docs versions aligned by default. A single-language patch is allowed only when the shared API contract and cross-language behavior do not change.
+
+Do not reuse a previously published version. PyPI package versions are immutable.
 
 ## Registry identity notes
 
-PyPI Trusted Publishing is preferred once the repository is ready for public
-release. Because `calle-ai` has not been published yet, configure a pending
-publisher first. TestPyPI and PyPI are separate registries, so configure the
-publisher separately in each registry you plan to use.
+Token-based publishing requires a PyPI API token stored as the GitHub Actions secret `PYPI_API_TOKEN`.
 
-Configure the pending publisher for:
+PyPI Trusted Publishing is a future optional improvement. To switch later, configure the PyPI publisher for:
 
 - Owner: `CALLE-AI`
 - Repository: `server-sdk-python`
 - Workflow filename: `publish-python.yml`
-- Environment name for TestPyPI: `testpypi`
 - Environment name for PyPI: `pypi`
 - Project name: `calle-ai`
 
-When using Trusted Publishing, run the workflow with auth
-`trusted-publishing`. When using API tokens, run it with auth `token` and
-configure `TEST_PYPI_API_TOKEN` or `PYPI_API_TOKEN`.
+When using API tokens, run the workflow with auth `token`. When Trusted Publishing is configured later, run the workflow with auth `trusted-publishing`.
 
-If the package already exists on PyPI later, use the project's Publishing page
-to add or update the trusted publisher with the same owner, repository, workflow
-filename, and environment.
+TestPyPI and PyPI are separate registries. TestPyPI success does not prove production PyPI availability.
