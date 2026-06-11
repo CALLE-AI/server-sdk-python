@@ -5,7 +5,6 @@ import httpx
 
 from ... import errors
 from ...client import AuthenticatedClient, Client
-from ...models.call import Call
 from ...models.create_call_request import CreateCallRequest
 from ...models.error_envelope import ErrorEnvelope
 from ...types import UNSET, Response, Unset
@@ -33,12 +32,7 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Call | ErrorEnvelope | None:
-    if response.status_code == 200:
-        response_200 = Call.from_dict(response.json())
-
-        return response_200
-
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | None:
     if response.status_code == 400:
         response_400 = ErrorEnvelope.from_dict(response.json())
 
@@ -59,6 +53,11 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 
         return response_409
 
+    if response.status_code == 422:
+        response_422 = ErrorEnvelope.from_dict(response.json())
+
+        return response_422
+
     if response.status_code == 429:
         response_429 = ErrorEnvelope.from_dict(response.json())
 
@@ -75,9 +74,7 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[Call | ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -91,8 +88,10 @@ def sync_detailed(
     client: AuthenticatedClient | Client,
     body: CreateCallRequest,
     idempotency_key: str | Unset = UNSET,
-) -> Response[Call | ErrorEnvelope]:
-    """Create an asynchronous call.
+) -> Response[ErrorEnvelope]:
+    """Create Call
+
+     Create an asynchronous call.
 
     Args:
         idempotency_key (str | Unset):
@@ -103,7 +102,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Call | ErrorEnvelope]
+        Response[ErrorEnvelope]
     """
 
     kwargs = _get_kwargs(
@@ -123,8 +122,10 @@ def sync(
     client: AuthenticatedClient | Client,
     body: CreateCallRequest,
     idempotency_key: str | Unset = UNSET,
-) -> Call | ErrorEnvelope | None:
-    """Create an asynchronous call.
+) -> ErrorEnvelope | None:
+    """Create Call
+
+     Create an asynchronous call.
 
     Args:
         idempotency_key (str | Unset):
@@ -135,7 +136,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Call | ErrorEnvelope
+        ErrorEnvelope
     """
 
     return sync_detailed(
@@ -150,8 +151,10 @@ async def asyncio_detailed(
     client: AuthenticatedClient | Client,
     body: CreateCallRequest,
     idempotency_key: str | Unset = UNSET,
-) -> Response[Call | ErrorEnvelope]:
-    """Create an asynchronous call.
+) -> Response[ErrorEnvelope]:
+    """Create Call
+
+     Create an asynchronous call.
 
     Args:
         idempotency_key (str | Unset):
@@ -162,7 +165,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[Call | ErrorEnvelope]
+        Response[ErrorEnvelope]
     """
 
     kwargs = _get_kwargs(
@@ -180,8 +183,10 @@ async def asyncio(
     client: AuthenticatedClient | Client,
     body: CreateCallRequest,
     idempotency_key: str | Unset = UNSET,
-) -> Call | ErrorEnvelope | None:
-    """Create an asynchronous call.
+) -> ErrorEnvelope | None:
+    """Create Call
+
+     Create an asynchronous call.
 
     Args:
         idempotency_key (str | Unset):
@@ -192,7 +197,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Call | ErrorEnvelope
+        ErrorEnvelope
     """
 
     return (

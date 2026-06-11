@@ -11,7 +11,10 @@ T = TypeVar("T", bound="CreateCallRequestMetadata")
 
 @_attrs_define
 class CreateCallRequestMetadata:
-    """ """
+    """Optional caller-owned metadata echoed on the call and webhook payloads. Use this for workflow ids, tenant ids, or
+    internal correlation keys.
+
+    """
 
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

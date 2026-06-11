@@ -10,13 +10,39 @@ from calle.errors import CalleAPIError, CalleTimeoutError
 
 COMPLETED_CALL = {
     "id": "call_123",
+    "object": "call_task",
     "status": "completed",
     "task": "Call.",
-    "recipient": {"phone": "+14155550100", "region": "US", "locale": "en-US"},
-    "structured_result": {"can_attend": "yes"},
-    "result_validation": {"valid": True},
+    "recipients": [
+        {
+            "id": "rcp_123",
+            "phones": ["+14155550100"],
+            "region": "US",
+            "locale": "en-US",
+            "status": "completed",
+            "structured_result": {"can_attend": "yes"},
+            "summary": "Recipient can attend.",
+            "attempts": [
+                {
+                    "id": "att_123",
+                    "phone": "+14155550100",
+                    "status": "completed",
+                    "started_at": "2026-05-31T00:00:10Z",
+                    "completed_at": "2026-05-31T00:01:00Z",
+                    "summary": "Recipient can attend.",
+                    "transcript_turns": [{"offset_seconds": 2, "speaker": "user", "text": "Yes."}],
+                    "provider_call_id": "provider_123",
+                    "failure_code": None,
+                    "failure_message": None,
+                }
+            ],
+        }
+    ],
+    "structured_result": {"completed_count": 1},
     "summary": "Done.",
-    "transcript": None,
+    "task_completed": True,
+    "completion_confidence": {"score": 0.92, "label": "high"},
+    "evidence": ["The recipient said yes."],
     "metadata": {"workflow_run_id": "wf_123"},
     "failure_code": None,
     "failure_message": None,
@@ -56,10 +82,28 @@ def test_create_call_sends_auth_and_idempotency_headers() -> None:
     assert request.headers["authorization"] == "Bearer key_test"
     assert request.headers["idempotency-key"] == "wf_123"
     payload = json.loads(request.content)
+    assert payload["recipients"] == [{"phones": ["+14155550100"], "region": "US", "locale": "en-US"}]
     assert payload["result_schema"] == {"type": "object", "properties": {}}
     assert payload["webhook_url"] == "https://example.com/webhook"
     assert call["id"] == "call_123"
-    assert call["structured_result"] == {"can_attend": "yes"}
+    assert call["structured_result"] == {"completed_count": 1}
+    assert call["task_completed"] is True
+    assert call["completion_confidence"] == {"score": 0.92, "label": "high"}
+    assert call["evidence"] == ["The recipient said yes."]
+    assert call["recipients"][0]["structured_result"] == {"can_attend": "yes"}
+    assert "result_validation" not in call
+
+
+@respx.mock
+def test_create_call_can_send_task_only_request() -> None:
+    route = respx.post("https://api.heycall-e.com/v1/calls").mock(return_value=httpx.Response(200, json=COMPLETED_CALL))
+    client = CalleClient(api_key="key_test", base_url="https://api.heycall-e.com")
+
+    call = client.calls.create(task="Call +14155550100.")
+
+    payload = json.loads(route.calls.last.request.content)
+    assert payload == {"task": "Call +14155550100."}
+    assert call["status"] == "completed"
 
 
 @respx.mock

@@ -17,20 +17,21 @@ class CalleCalls:
         self,
         *,
         task: str,
-        recipient: JsonObject,
-        result_schema: JsonObject,
-        context: JsonObject | None = None,
-        policy: JsonObject | None = None,
+        recipient: JsonObject | None = None,
+        recipients: list[JsonObject] | None = None,
+        result_schema: JsonObject | None = None,
+        recipient_result_schema: JsonObject | None = None,
         metadata: JsonObject | None = None,
         webhook_url: str | None = None,
         idempotency_key: str | None = None,
     ) -> JsonObject:
+        if recipient is not None and recipients is not None:
+            raise ValueError("Pass either recipient or recipients, not both.")
         body = {
             "task": task,
-            "recipient": recipient,
-            "context": context,
+            "recipients": [_normalize_recipient(recipient)] if recipient is not None else recipients,
             "result_schema": result_schema,
-            "policy": policy,
+            "recipient_result_schema": recipient_result_schema,
             "metadata": metadata,
             "webhook_url": webhook_url,
         }
@@ -84,3 +85,12 @@ class CalleCalls:
         if not isinstance(payload, dict):
             raise CalleConnectionError("CALL-E API returned a non-object JSON response.")
         return payload
+
+
+def _normalize_recipient(recipient: JsonObject) -> JsonObject:
+    if "phones" in recipient:
+        return recipient
+    phone = recipient.get("phone")
+    normalized = {key: value for key, value in recipient.items() if key != "phone"}
+    normalized["phones"] = [phone] if phone is not None else []
+    return normalized

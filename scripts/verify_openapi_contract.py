@@ -12,11 +12,11 @@ def assert_contract(condition: bool, message: str) -> None:
         raise RuntimeError(f"OpenAPI contract check failed: {message}")
 
 
-def response_schema_ref(spec: dict[str, Any], path: str, method: str) -> str | None:
+def response_schema_ref(spec: dict[str, Any], path: str, method: str, status: str = "200") -> str | None:
     endpoint = spec.get("paths", {}).get(path, {}).get(method, {})
     return (
         endpoint.get("responses", {})
-        .get("200", {})
+        .get(status, {})
         .get("content", {})
         .get("application/json", {})
         .get("schema", {})
@@ -49,7 +49,7 @@ def main() -> None:
         "unexpected title",
     )
     assert_contract(
-        spec.get("info", {}).get("version") == "0.1.0",
+        spec.get("info", {}).get("version") == "0.2.0",
         "unexpected API version",
     )
 
@@ -59,14 +59,15 @@ def main() -> None:
             "method": "post",
             "operation_id": "createCall",
             "request_schema": "#/components/schemas/CreateCallRequest",
-            "response_schema": "#/components/schemas/Call",
-            "error_statuses": ["400", "401", "403", "409", "429", "500"],
+            "response_status": "201",
+            "response_schema": "#/components/schemas/CallTask",
+            "error_statuses": ["400", "401", "403", "409", "422", "429", "500"],
         },
         {
             "path": "/v1/calls/{call_id}",
             "method": "get",
             "operation_id": "getCall",
-            "response_schema": "#/components/schemas/Call",
+            "response_schema": "#/components/schemas/CallTask",
             "error_statuses": ["401", "403", "404", "429", "500"],
         },
         {
@@ -97,8 +98,9 @@ def main() -> None:
             f"unexpected operationId for {label}",
         )
         assert_contract(
-            response_schema_ref(spec, path, method) == operation["response_schema"],
-            f"unexpected 200 response schema for {label}",
+            response_schema_ref(spec, path, method, operation.get("response_status", "200"))
+            == operation["response_schema"],
+            f"unexpected {operation.get('response_status', '200')} response schema for {label}",
         )
 
         request_schema = operation.get("request_schema")
@@ -131,11 +133,16 @@ def main() -> None:
     schemas = spec.get("components", {}).get("schemas", {})
     for schema_name in [
         "CreateCallRequest",
-        "CallRecipient",
-        "CallPolicy",
+        "CallTaskRecipientRequest",
         "CallStatus",
-        "ResultValidation",
-        "Call",
+        "CompletionConfidence",
+        "RecipientStatus",
+        "AttemptStatus",
+        "TranscriptSpeaker",
+        "CallTranscriptTurn",
+        "CallTaskAttempt",
+        "CallTaskRecipient",
+        "CallTask",
         "DeveloperEvent",
         "EventList",
         "WebhookEventType",
@@ -150,9 +157,9 @@ def main() -> None:
     create_call_properties = schemas["CreateCallRequest"].get("properties", {})
     for property_name in [
         "task",
-        "recipient",
+        "recipients",
         "result_schema",
-        "policy",
+        "recipient_result_schema",
         "metadata",
         "webhook_url",
     ]:
@@ -162,22 +169,29 @@ def main() -> None:
         )
 
     assert_contract(
-        "result_schema" in schemas["CreateCallRequest"].get("required", []),
-        "CreateCallRequest must require result_schema",
+        schemas["CreateCallRequest"].get("required", []) == ["task"],
+        "CreateCallRequest must require only task",
     )
 
-    call_properties = schemas["Call"].get("properties", {})
+    call_properties = schemas["CallTask"].get("properties", {})
     for property_name in [
         "id",
+        "object",
         "status",
+        "task",
+        "recipients",
         "structured_result",
-        "result_validation",
         "summary",
+        "task_completed",
+        "completion_confidence",
+        "evidence",
         "metadata",
         "created_at",
         "completed_at",
     ]:
-        assert_contract(property_name in call_properties, f"Call missing {property_name}")
+        assert_contract(property_name in call_properties, f"CallTask missing {property_name}")
+
+    assert_contract("result_validation" not in call_properties, "CallTask must not expose result_validation")
 
     event_list_data_ref = (
         schemas["EventList"]
@@ -191,7 +205,7 @@ def main() -> None:
         "EventList.data must contain DeveloperEvent items",
     )
 
-    print(f"Verified Phase 1 OpenAPI contract at {SPEC_PATH}.")
+    print(f"Verified CALL-E OpenAPI contract at {SPEC_PATH}.")
 
 
 if __name__ == "__main__":

@@ -6,12 +6,15 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="WebhookCallDataMetadata")
+T = TypeVar("T", bound="CreateCallRequestResultSchemaType0")
 
 
 @_attrs_define
-class WebhookCallDataMetadata:
-    """ """
+class CreateCallRequestResultSchemaType0:
+    """Optional JSON Schema object that defines the structured result CALL-E should extract for the whole call task. Object
+    schemas are strict by default; fields not declared in `properties` are rejected.
+
+    """
 
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
@@ -25,10 +28,10 @@ class WebhookCallDataMetadata:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        webhook_call_data_metadata = cls()
+        create_call_request_result_schema_type_0 = cls()
 
-        webhook_call_data_metadata.additional_properties = d
-        return webhook_call_data_metadata
+        create_call_request_result_schema_type_0.additional_properties = d
+        return create_call_request_result_schema_type_0
 
     @property
     def additional_keys(self) -> list[str]:

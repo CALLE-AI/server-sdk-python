@@ -11,19 +11,27 @@ def main() -> None:
     )
 
     call = client.calls.create_and_wait(
-        task="Call the recipient and ask whether they can attend Friday lunch in San Francisco.",
-        recipient={
-            "phone": os.environ.get("CALLE_EXAMPLE_PHONE", "+14155550100"),
-            "region": "US",
-            "locale": "en-US",
-        },
+        task="Call each recipient and ask whether they can attend Friday lunch in San Francisco.",
+        recipients=[
+            {
+                "phones": [os.environ.get("CALLE_EXAMPLE_PHONE", "+14155550100")],
+                "region": "US",
+                "locale": "en-US",
+            }
+        ],
         result_schema={
+            "type": "object",
+            "required": ["completed_count"],
+            "properties": {
+                "completed_count": {"type": "integer"},
+            },
+        },
+        recipient_result_schema={
             "type": "object",
             "required": ["can_attend"],
             "properties": {
                 "can_attend": {"type": "string", "enum": ["yes", "no", "unknown"]},
             },
-            "additionalProperties": False,
         },
         metadata={"workflow_run_id": "example_local"},
         idempotency_key="example_local_friday_lunch",

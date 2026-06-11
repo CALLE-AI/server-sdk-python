@@ -10,10 +10,10 @@ TestPyPI has the prerelease package:
 calle-ai==0.1.0b1
 ```
 
-The first production PyPI release version is:
+The current production PyPI release version is:
 
 ```text
-calle-ai==0.1.0
+calle-ai==0.2.0
 ```
 
 For this release, use token-based PyPI publishing with the GitHub Actions secret `PYPI_API_TOKEN`.
@@ -30,7 +30,7 @@ The validation script checks the OpenAPI contract, tests, lint, types, examples,
 
 ## Stable PyPI publish
 
-1. Confirm `pyproject.toml` has a unique stable version. The first stable version is `0.1.0`.
+1. Confirm `pyproject.toml` has a unique stable version.
 2. Confirm GitHub Actions secret `PYPI_API_TOKEN` is configured.
 3. Open the `Publish Python package` workflow in GitHub Actions.
 4. Run the workflow from `main` with repository `pypi` and auth `token`.
@@ -45,7 +45,7 @@ tmpdir="$(mktemp -d)"
 python -m venv "$tmpdir/.venv"
 . "$tmpdir/.venv/bin/activate"
 python -m pip install --upgrade pip
-python -m pip install calle-ai==0.1.0
+python -m pip install calle-ai==0.2.0
 python -c 'from calle import CalleClient; print(CalleClient)'
 ```
 

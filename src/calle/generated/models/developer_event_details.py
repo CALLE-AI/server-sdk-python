@@ -11,7 +11,7 @@ T = TypeVar("T", bound="DeveloperEventDetails")
 
 @_attrs_define
 class DeveloperEventDetails:
-    """ """
+    """Event-specific structured details. Shape depends on the event type."""
 
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 

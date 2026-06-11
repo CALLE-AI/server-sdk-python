@@ -7,11 +7,11 @@ environments. Do not expose CALL-E API keys in browser code.
 
 ## Documentation
 
-- Developer docs: <http://8.222.221.91:5204/calle-docs-site/>
-- SDK guide: <http://8.222.221.91:5204/calle-docs-site/#/sdks>
-- API Reference: <http://8.222.221.91:5204/calle-docs-site/#/api-reference>
-- Webhooks: <http://8.222.221.91:5204/calle-docs-site/#/webhooks>
-- Changelog: <http://8.222.221.91:5204/calle-docs-site/#/changelog>
+- Developer docs: <https://docs.heycall-e.com/>
+- SDK guide: <https://docs.heycall-e.com/#/sdks>
+- API Reference: <https://docs.heycall-e.com/#/api-reference>
+- Webhooks: <https://docs.heycall-e.com/#/webhooks>
+- Changelog: <https://docs.heycall-e.com/#/changelog>
 
 ## Install
 
@@ -21,10 +21,10 @@ Install the stable package from PyPI:
 pip install calle-ai
 ```
 
-Pin the first stable release when your deployment process requires exact package reproducibility:
+Pin the current stable release when your deployment process requires exact package reproducibility:
 
 ```bash
-pip install calle-ai==0.1.0
+pip install calle-ai==0.2.0
 ```
 
 Use a local checkout for development and package smoke tests:
@@ -71,21 +71,29 @@ client = CalleClient(
 )
 
 call = client.calls.create_and_wait(
-    task="Call the recipient and ask whether they can attend Friday lunch in San Francisco.",
-    recipient={"phone": "+14155550100", "region": "US", "locale": "en-US"},
+    task="Call each recipient and ask whether they can attend Friday lunch in San Francisco.",
+    recipients=[{"phones": ["+14155550100"], "region": "US", "locale": "en-US"}],
     result_schema={
+        "type": "object",
+        "required": ["completed_count"],
+        "properties": {
+            "completed_count": {"type": "integer"},
+        },
+    },
+    recipient_result_schema={
         "type": "object",
         "required": ["can_attend"],
         "properties": {
             "can_attend": {"type": "string", "enum": ["yes", "no", "unknown"]},
         },
-        "additionalProperties": False,
     },
     metadata={"workflow_run_id": "wf_123"},
     idempotency_key="wf_123_friday_lunch",
 )
 
 print(call["status"], call["structured_result"])
+print(call["task_completed"], call["completion_confidence"], call["evidence"])
+print(call["recipients"][0]["structured_result"])
 ```
 
 ## Webhook Verification
@@ -120,11 +128,11 @@ Manual stable PyPI publish:
 ```bash
 python -m venv .venv
 . .venv/bin/activate
-pip install calle-ai==0.1.0
+pip install calle-ai==0.2.0
 python -c 'from calle import CalleClient; print(CalleClient)'
 ```
 
-The first stable version is `0.1.0`. Do not reuse a previously published PyPI version.
+The current stable version is `0.2.0`. Do not reuse a previously published PyPI version.
 
 ## Project Documents
 

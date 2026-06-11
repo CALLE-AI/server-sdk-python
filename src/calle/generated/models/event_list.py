@@ -19,9 +19,9 @@ T = TypeVar("T", bound="EventList")
 class EventList:
     """
     Attributes:
-        object_ (EventListObject):
-        data (list[DeveloperEvent]):
-        next_cursor (None | str | Unset):
+        object_ (EventListObject): Always `list` for paginated list responses.
+        data (list[DeveloperEvent]): Events in this page, ordered from oldest to newest for the requested cursor window.
+        next_cursor (None | str | Unset): Cursor for the next page. `null` means there are no more events.
     """
 
     object_: EventListObject

@@ -20,14 +20,14 @@ T = TypeVar("T", bound="DeveloperEvent")
 class DeveloperEvent:
     """
     Attributes:
-        id (str):
-        type_ (str):
-        call_id (str):
-        created_at (datetime.datetime):
-        level (DeveloperEventLevel):
-        status (CallStatus):
-        message (str):
-        details (DeveloperEventDetails):
+        id (str): Public event identifier.
+        type_ (str): Developer-facing event type, for example `call.completed`.
+        call_id (str): Public CALL-E call identifier associated with this event.
+        created_at (datetime.datetime): ISO 8601 timestamp when the event was emitted.
+        level (DeveloperEventLevel): Event severity for log routing and alerting.
+        status (CallStatus): Current lifecycle state of a CALL-E call.
+        message (str): Short human-readable event message.
+        details (DeveloperEventDetails): Event-specific structured details. Shape depends on the event type.
     """
 
     id: str

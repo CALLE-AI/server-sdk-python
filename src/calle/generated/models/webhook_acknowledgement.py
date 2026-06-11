@@ -6,29 +6,45 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
-T = TypeVar("T", bound="CreateCallRequestResultSchema")
+from ..types import UNSET, Unset
+
+T = TypeVar("T", bound="WebhookAcknowledgement")
 
 
 @_attrs_define
-class CreateCallRequestResultSchema:
-    """ """
+class WebhookAcknowledgement:
+    """Example acknowledgement response from your webhook receiver. CALL-E treats any 2xx response as delivered and ignores
+    the response body.
 
+        Attributes:
+            ok (bool | Unset): Optional acknowledgement flag returned by your server.
+    """
+
+    ok: bool | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
+        ok = self.ok
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
+        field_dict.update({})
+        if ok is not UNSET:
+            field_dict["ok"] = ok
 
         return field_dict
 
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         d = dict(src_dict)
-        create_call_request_result_schema = cls()
+        ok = d.pop("ok", UNSET)
 
-        create_call_request_result_schema.additional_properties = d
-        return create_call_request_result_schema
+        webhook_acknowledgement = cls(
+            ok=ok,
+        )
+
+        webhook_acknowledgement.additional_properties = d
+        return webhook_acknowledgement
 
     @property
     def additional_keys(self) -> list[str]:
