@@ -5,6 +5,7 @@ from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 
+
 T = TypeVar("T", bound="CompletionConfidence")
 
 

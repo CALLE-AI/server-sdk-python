@@ -18,4 +18,12 @@ fi
 . "$smoke_dir/.venv/bin/activate"
 python -m pip install --upgrade pip
 python -m pip install "$artifact"
-python -c 'from calle import CalleClient; print(CalleClient)'
+python - <<'PY'
+from calle import CalleClient
+from calle.generated.models import Goal, GoalRun
+
+client = CalleClient(api_key="smoke")
+assert callable(client.goals.run_and_wait)
+client.close()
+print(CalleClient, Goal, GoalRun)
+PY

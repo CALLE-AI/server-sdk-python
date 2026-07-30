@@ -6,13 +6,16 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+
 T = TypeVar("T", bound="CallTaskRecipientStructuredResultType0")
 
 
 @_attrs_define
 class CallTaskRecipientStructuredResultType0:
-    """Schema-valid structured result object extracted for this recipient. `null` when no usable structured result object
-    was produced.
+    """Schema-valid structured result object extracted for this recipient using `recipient_result_schema`.
+
+    `null` means CALL-E could not produce a schema-valid result for this recipient from the terminal call evidence, or
+    no `recipient_result_schema` was provided.
 
     """
 

@@ -1,13 +1,16 @@
 from __future__ import annotations
 
-import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar, TYPE_CHECKING
 
 from attrs import define as _attrs_define
 
-from ..models.call_status import CallStatus, check_call_status
-from ..models.developer_event_level import DeveloperEventLevel, check_developer_event_level
+
+from ..models.call_status import CallStatus
+from ..models.call_status import check_call_status
+from ..models.developer_event_level import check_developer_event_level
+from ..models.developer_event_level import DeveloperEventLevel
+import datetime
 
 if TYPE_CHECKING:
     from ..models.developer_event_details import DeveloperEventDetails
@@ -25,7 +28,8 @@ class DeveloperEvent:
         call_id (str): Public CALL-E call identifier associated with this event.
         created_at (datetime.datetime): ISO 8601 timestamp when the event was emitted.
         level (DeveloperEventLevel): Event severity for log routing and alerting.
-        status (CallStatus): Current lifecycle state of a CALL-E call.
+        status (CallStatus): Current lifecycle state of a CALL-E call. `in_progress` includes post-call result
+            finalization; terminal states are published only after the post-call outcome is available.
         message (str): Short human-readable event message.
         details (DeveloperEventDetails): Event-specific structured details. Shape depends on the event type.
     """

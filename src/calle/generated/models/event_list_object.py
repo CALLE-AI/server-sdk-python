@@ -10,4 +10,6 @@ EVENT_LIST_OBJECT_VALUES: set[EventListObject] = {
 def check_event_list_object(value: str) -> EventListObject:
     if value in EVENT_LIST_OBJECT_VALUES:
         return value
-    raise TypeError(f"Unexpected value {value!r}. Expected one of {EVENT_LIST_OBJECT_VALUES!r}")
+    raise TypeError(
+        f"Unexpected value {value!r}. Expected one of {EVENT_LIST_OBJECT_VALUES!r}"
+    )

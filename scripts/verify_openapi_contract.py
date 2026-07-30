@@ -49,7 +49,7 @@ def main() -> None:
         "unexpected title",
     )
     assert_contract(
-        spec.get("info", {}).get("version") == "0.2.0",
+        spec.get("info", {}).get("version") == "0.6.0",
         "unexpected API version",
     )
 
@@ -76,6 +76,48 @@ def main() -> None:
             "operation_id": "listCallEvents",
             "response_schema": "#/components/schemas/EventList",
             "error_statuses": ["401", "403", "404", "429", "500"],
+        },
+        {
+            "path": "/v1/goals",
+            "method": "get",
+            "operation_id": "listGoals",
+            "response_schema": "#/components/schemas/GoalList",
+            "error_statuses": ["400", "401", "403", "409", "429", "500"],
+        },
+        {
+            "path": "/v1/goals/{goal_id}",
+            "method": "get",
+            "operation_id": "getGoal",
+            "response_schema": "#/components/schemas/Goal",
+            "error_statuses": ["401", "403", "404", "409", "429", "500", "502", "503"],
+        },
+        {
+            "path": "/v1/goals/{goal_id}/runs",
+            "method": "post",
+            "operation_id": "createGoalRun",
+            "request_schema": "#/components/schemas/CreateGoalRunRequest",
+            "response_status": "201",
+            "response_schema": "#/components/schemas/GoalRun",
+            "error_statuses": [
+                "400",
+                "401",
+                "402",
+                "403",
+                "404",
+                "409",
+                "422",
+                "429",
+                "500",
+                "502",
+                "503",
+            ],
+        },
+        {
+            "path": "/v1/goals/{goal_id}/runs/{goal_run_id}",
+            "method": "get",
+            "operation_id": "getGoalRun",
+            "response_schema": "#/components/schemas/GoalRun",
+            "error_statuses": ["401", "403", "404", "429", "500", "502", "503"],
         },
         {
             "path": "/calle/webhook",
@@ -118,12 +160,15 @@ def main() -> None:
             )
 
     webhook_refs = parameter_refs(spec, "/calle/webhook", "post")
-    for ref in [
-        "#/components/parameters/WebhookEventId",
-        "#/components/parameters/WebhookTimestamp",
-        "#/components/parameters/WebhookSignature",
-    ]:
-        assert_contract(ref in webhook_refs, f"missing webhook parameter {ref}")
+    assert_contract(
+        webhook_refs == ["#/components/parameters/WebhookEventId"],
+        "webhook endpoint must expose only the event id header",
+    )
+    parameters = spec.get("components", {}).get("parameters", {})
+    assert_contract(
+        "WebhookTimestamp" not in parameters and "WebhookSignature" not in parameters,
+        "webhook contract must not define legacy signature parameters",
+    )
 
     webhook_security = spec.get("paths", {}).get("/calle/webhook", {}).get("post", {}).get(
         "security"
@@ -149,10 +194,37 @@ def main() -> None:
         "WebhookEvent",
         "WebhookCallData",
         "WebhookAcknowledgement",
+        "GoalList",
+        "Goal",
+        "GoalPublishedRunSpec",
+        "CreateGoalRunRequest",
+        "GoalVariables",
+        "GoalRun",
+        "GoalRunSpecSnapshot",
+        "GoalRunStatus",
+        "GoalRunError",
         "ErrorEnvelope",
         "APIError",
     ]:
         assert_contract(schema_name in schemas, f"missing schema {schema_name}")
+
+    assert_contract(
+        schemas["WebhookCallData"].get("allOf")
+        == [{"$ref": "#/components/schemas/CallTask"}],
+        "webhook data must reuse the complete call task shape",
+    )
+    terminal_result_fields = {
+        "structured_result",
+        "summary",
+        "task_completed",
+        "completion_confidence",
+        "evidence",
+        "completed_at",
+    }
+    assert_contract(
+        terminal_result_fields.issubset(set(schemas["CallTask"].get("required", []))),
+        "complete terminal result fields must remain required in webhook call data",
+    )
 
     create_call_properties = schemas["CreateCallRequest"].get("properties", {})
     for property_name in [
@@ -203,6 +275,70 @@ def main() -> None:
     assert_contract(
         event_list_data_ref == "#/components/schemas/DeveloperEvent",
         "EventList.data must contain DeveloperEvent items",
+    )
+
+    create_goal_run = schemas["CreateGoalRunRequest"]
+    create_goal_run_properties = create_goal_run.get("properties", {})
+    assert_contract(
+        sorted(create_goal_run_properties) == ["phone", "variables"],
+        "CreateGoalRunRequest must contain only phone and variables",
+    )
+    assert_contract(
+        create_goal_run.get("required") == ["phone"],
+        "CreateGoalRunRequest must require only phone",
+    )
+    assert_contract(
+        create_goal_run.get("additionalProperties") is False,
+        "CreateGoalRunRequest must reject unknown fields",
+    )
+
+    goal_properties = schemas["Goal"].get("properties", {})
+    for property_name in [
+        "id",
+        "title",
+        "description",
+        "status",
+        "published_run_spec",
+    ]:
+        assert_contract(property_name in goal_properties, f"Goal missing {property_name}")
+
+    published_run_spec_properties = schemas["GoalPublishedRunSpec"].get("properties", {})
+    for checksum in [
+        "semantic_checksum",
+        "input_schema_checksum",
+        "result_schema_checksum",
+    ]:
+        assert_contract(checksum not in goal_properties, f"Goal must not expose {checksum}")
+        assert_contract(
+            checksum not in published_run_spec_properties,
+            f"GoalPublishedRunSpec must not expose {checksum}",
+        )
+
+    goal_run_properties = schemas["GoalRun"].get("properties", {})
+    for property_name in [
+        "id",
+        "goal_id",
+        "run_id",
+        "run_spec",
+        "status",
+        "result",
+        "error",
+        "created_at",
+        "completed_at",
+    ]:
+        assert_contract(
+            property_name in goal_run_properties,
+            f"GoalRun missing {property_name}",
+        )
+
+    goal_run_parameter_refs = parameter_refs(
+        spec,
+        "/v1/goals/{goal_id}/runs",
+        "post",
+    )
+    assert_contract(
+        "#/components/parameters/GoalRunIdempotencyKey" in goal_run_parameter_refs,
+        "create Goal Run must require the stable idempotency header",
     )
 
     print(f"Verified CALL-E OpenAPI contract at {SPEC_PATH}.")

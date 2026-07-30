@@ -9,20 +9,41 @@ from .call_task_attempt import CallTaskAttempt
 from .call_task_object import CallTaskObject
 from .call_task_recipient import CallTaskRecipient
 from .call_task_recipient_request import CallTaskRecipientRequest
-from .call_task_recipient_structured_result_type_0 import CallTaskRecipientStructuredResultType0
+from .call_task_recipient_structured_result_type_0 import (
+    CallTaskRecipientStructuredResultType0,
+)
 from .call_task_structured_result_type_0 import CallTaskStructuredResultType0
 from .call_transcript_turn import CallTranscriptTurn
 from .completion_confidence import CompletionConfidence
 from .create_call_request import CreateCallRequest
 from .create_call_request_metadata import CreateCallRequestMetadata
-from .create_call_request_recipient_result_schema_type_0 import CreateCallRequestRecipientResultSchemaType0
+from .create_call_request_recipient_result_schema_type_0 import (
+    CreateCallRequestRecipientResultSchemaType0,
+)
 from .create_call_request_result_schema_type_0 import CreateCallRequestResultSchemaType0
+from .create_goal_run_request import CreateGoalRunRequest
 from .developer_event import DeveloperEvent
 from .developer_event_details import DeveloperEventDetails
 from .developer_event_level import DeveloperEventLevel
 from .error_envelope import ErrorEnvelope
 from .event_list import EventList
 from .event_list_object import EventListObject
+from .goal import Goal
+from .goal_list import GoalList
+from .goal_list_object import GoalListObject
+from .goal_object import GoalObject
+from .goal_published_run_spec import GoalPublishedRunSpec
+from .goal_published_run_spec_input_schema import GoalPublishedRunSpecInputSchema
+from .goal_published_run_spec_result_schema import GoalPublishedRunSpecResultSchema
+from .goal_run import GoalRun
+from .goal_run_error import GoalRunError
+from .goal_run_error_code import GoalRunErrorCode
+from .goal_run_object import GoalRunObject
+from .goal_run_result_type_0 import GoalRunResultType0
+from .goal_run_spec_snapshot import GoalRunSpecSnapshot
+from .goal_run_status import GoalRunStatus
+from .goal_status import GoalStatus
+from .goal_variables import GoalVariables
 from .recipient_status import RecipientStatus
 from .transcript_speaker import TranscriptSpeaker
 from .webhook_acknowledgement import WebhookAcknowledgement
@@ -46,12 +67,29 @@ __all__ = (
     "CreateCallRequestMetadata",
     "CreateCallRequestRecipientResultSchemaType0",
     "CreateCallRequestResultSchemaType0",
+    "CreateGoalRunRequest",
     "DeveloperEvent",
     "DeveloperEventDetails",
     "DeveloperEventLevel",
     "ErrorEnvelope",
     "EventList",
     "EventListObject",
+    "Goal",
+    "GoalList",
+    "GoalListObject",
+    "GoalObject",
+    "GoalPublishedRunSpec",
+    "GoalPublishedRunSpecInputSchema",
+    "GoalPublishedRunSpecResultSchema",
+    "GoalRun",
+    "GoalRunError",
+    "GoalRunErrorCode",
+    "GoalRunObject",
+    "GoalRunResultType0",
+    "GoalRunSpecSnapshot",
+    "GoalRunStatus",
+    "GoalStatus",
+    "GoalVariables",
     "RecipientStatus",
     "TranscriptSpeaker",
     "WebhookAcknowledgement",

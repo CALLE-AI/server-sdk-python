@@ -35,5 +35,5 @@ What should happen instead?
 
 ## Logs
 
-Paste relevant logs with API keys, webhook secrets, phone numbers, and other
+Paste relevant logs with API keys, phone numbers, and other
 private data removed.

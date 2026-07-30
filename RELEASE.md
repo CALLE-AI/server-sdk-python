@@ -13,7 +13,7 @@ calle-ai==0.1.0b1
 The current production PyPI release version is:
 
 ```text
-calle-ai==0.2.0
+calle-ai==0.6.0
 ```
 
 For this release, use token-based PyPI publishing with the GitHub Actions secret `PYPI_API_TOKEN`.
@@ -26,7 +26,29 @@ Run these checks before publishing:
 bash scripts/validate.sh
 ```
 
-The validation script checks the OpenAPI contract, tests, lint, types, examples, distribution metadata, wheel install, source distribution install, and imports `CalleClient` from fresh virtual environments.
+The validation script checks the OpenAPI contract, tests, lint, types,
+examples, distribution metadata, wheel install, source distribution install,
+and Goal wrapper plus generated-model imports from fresh virtual environments.
+
+## Test API Goal smoke
+
+Before publishing a release that changes Goal behavior, run the local release
+candidate against a published Goal in the test environment:
+
+```bash
+export CALLE_API_KEY="<TEST_API_KEY>"
+export CALLE_BASE_URL="https://test-api.heycall-e.com"
+export CALLE_GOAL_ID="<PUBLISHED_TEST_GOAL_ID>"
+export CALLE_GOAL_PHONE="<AUTHORIZED_TEST_E164_PHONE>"
+export CALLE_GOAL_VARIABLES='{"name":"Alex"}'
+export CALLE_IDEMPOTENCY_KEY="<UNIQUE_DURABLE_TEST_KEY>"
+uv run python examples/run_goal_and_wait.py
+```
+
+This smoke test creates a real phone call. Use an authorized test number and a
+new idempotency key for a new logical test. Reuse the same key only when
+retrying that exact request. Record the returned Goal Run id and verify that
+exactly one of `result` or `error` is non-null.
 
 ## Stable PyPI publish
 
@@ -45,15 +67,15 @@ tmpdir="$(mktemp -d)"
 python -m venv "$tmpdir/.venv"
 . "$tmpdir/.venv/bin/activate"
 python -m pip install --upgrade pip
-python -m pip install calle-ai==0.2.0
-python -c 'from calle import CalleClient; print(CalleClient)'
+python -m pip install calle-ai==0.6.0
+python -c 'from calle import CalleClient; c = CalleClient(api_key="smoke"); assert callable(c.goals.run_and_wait); c.close()'
 ```
 
 ## Version rules
 
 - Patch releases fix SDK wrapper bugs, type issues, packaging metadata, README examples, or distribution issues without changing public API behavior.
 - Minor releases add backward-compatible API fields, endpoints, or SDK helpers.
-- Major releases make breaking public API, method signature, stable error, or webhook signature contract changes.
+- Major releases make breaking public API, method signature, stable error, or webhook delivery contract changes.
 
 Keep TypeScript, Python, OpenAPI, and public docs versions aligned by default. A single-language patch is allowed only when the shared API contract and cross-language behavior do not change.
 

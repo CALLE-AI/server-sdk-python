@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import Any, TypeVar, TYPE_CHECKING
 
 from attrs import define as _attrs_define
 
-from ..models.api_error_code import APIErrorCode, check_api_error_code
+
+from ..models.api_error_code import APIErrorCode
+from ..models.api_error_code import check_api_error_code
 
 if TYPE_CHECKING:
     from ..models.api_error_details import APIErrorDetails

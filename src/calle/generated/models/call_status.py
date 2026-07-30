@@ -14,4 +14,6 @@ CALL_STATUS_VALUES: set[CallStatus] = {
 def check_call_status(value: str) -> CallStatus:
     if value in CALL_STATUS_VALUES:
         return value
-    raise TypeError(f"Unexpected value {value!r}. Expected one of {CALL_STATUS_VALUES!r}")
+    raise TypeError(
+        f"Unexpected value {value!r}. Expected one of {CALL_STATUS_VALUES!r}"
+    )

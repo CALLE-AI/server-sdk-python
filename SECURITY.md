@@ -21,8 +21,17 @@ Send a private report to the CALL-E maintainers with:
 ## Secret handling
 
 This SDK is for trusted server environments only. Do not expose CALL-E API keys
-or webhook secrets in browser code, mobile apps, public logs, or client-side
-bundles.
+in browser code, mobile apps, public logs, or client-side bundles.
 
-Webhook handlers must verify `CALL-E-Timestamp` and `CALL-E-Signature` against
-the raw request body before parsing or trusting an event.
+## Webhook receivers
+
+CALL-E terminal webhooks do not include a webhook secret,
+`CALL-E-Timestamp`, or `CALL-E-Signature`. Do not treat the event id or payload
+as cryptographic proof of origin.
+
+Treat the receiver as a public, untrusted-input boundary: accept only the
+intended route, validate the JSON event shape, compare `CALL-E-Event-Id` with
+the body event id, and persist that id before side effects so retries are
+idempotent. If an integration requires origin assurance before a sensitive
+action, fetch the referenced call through the authenticated Calls API and
+compare its terminal snapshot.

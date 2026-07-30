@@ -1,6 +1,8 @@
 from typing import Literal
 
-AttemptStatus = Literal["canceled", "completed", "dialing", "failed", "in_progress", "queued"]
+AttemptStatus = Literal[
+    "canceled", "completed", "dialing", "failed", "in_progress", "queued"
+]
 
 ATTEMPT_STATUS_VALUES: set[AttemptStatus] = {
     "canceled",
@@ -15,4 +17,6 @@ ATTEMPT_STATUS_VALUES: set[AttemptStatus] = {
 def check_attempt_status(value: str) -> AttemptStatus:
     if value in ATTEMPT_STATUS_VALUES:
         return value
-    raise TypeError(f"Unexpected value {value!r}. Expected one of {ATTEMPT_STATUS_VALUES!r}")
+    raise TypeError(
+        f"Unexpected value {value!r}. Expected one of {ATTEMPT_STATUS_VALUES!r}"
+    )
