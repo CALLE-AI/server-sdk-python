@@ -1,17 +1,23 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import Any, TypeVar, TYPE_CHECKING
 
 from attrs import define as _attrs_define
 
 from ..types import UNSET, Unset
 
+from typing import cast
+
 if TYPE_CHECKING:
     from ..models.call_task_recipient_request import CallTaskRecipientRequest
     from ..models.create_call_request_metadata import CreateCallRequestMetadata
-    from ..models.create_call_request_recipient_result_schema_type_0 import CreateCallRequestRecipientResultSchemaType0
-    from ..models.create_call_request_result_schema_type_0 import CreateCallRequestResultSchemaType0
+    from ..models.create_call_request_recipient_result_schema_type_0 import (
+        CreateCallRequestRecipientResultSchemaType0,
+    )
+    from ..models.create_call_request_result_schema_type_0 import (
+        CreateCallRequestResultSchemaType0,
+    )
 
 
 T = TypeVar("T", bound="CreateCallRequest")
@@ -26,11 +32,36 @@ class CreateCallRequest:
         recipients (list[CallTaskRecipientRequest] | None | Unset): Optional explicit recipients for this call task.
             Omit it when the task text already contains the phone targets CALL-E should use.
         result_schema (CreateCallRequestResultSchemaType0 | None | Unset): Optional JSON Schema object that defines the
-            structured result CALL-E should extract for the whole call task. Object schemas are strict by default; fields
-            not declared in `properties` are rejected.
+            structured result CALL-E should extract for the whole call task.
+
+            CALL-E passes the schema, including field `description` values, to the extraction model after the call reaches a
+            terminal state. Use descriptions to explain field meaning and enum selection logic, for example: "Use strong
+            when the prospect asks about pricing, demos, or next steps."
+
+            Descriptions guide extraction but are not hard validation rules. Hard validation comes from `type`, `required`,
+            `enum`, and `additionalProperties`.
+
+            Supported schema features are `type`, `properties`, `required`, `enum`, nested `object` fields, simple
+            `array.items`, `description`, and `additionalProperties: false`. Unsupported features include `$ref`, `oneOf`,
+            `anyOf`, `allOf`, recursive schemas, complex format validation, and `additionalProperties: true`.
+
+            Prefer string enums over booleans for business decisions that may be unclear, and include an `unknown` enum
+            value when the call may not provide enough evidence.
         recipient_result_schema (CreateCallRequestRecipientResultSchemaType0 | None | Unset): Optional JSON Schema
-            object that defines the structured result CALL-E should extract for each recipient. Object schemas are strict by
-            default; fields not declared in `properties` are rejected.
+            object that defines the structured result CALL-E should extract independently for each recipient.
+
+            This is useful for batch calls where each recipient needs their own outcome, such as `can_attend`, `confirmed`,
+            `requested_callback`, or `interest_level`.
+
+            Do not use reserved recipient response field names such as `summary`, `status`, `transcript`, `call_id`, or
+            timing fields as custom result fields. Use names such as `customer_summary`, `notes`, or `reason` instead.
+
+            Field `description` values are passed to the extraction model and should explain how enum values should be
+            selected. Descriptions guide extraction but are not hard validation rules. Hard validation comes from `type`,
+            `required`, `enum`, and `additionalProperties`.
+
+            Object schemas are strict by default. Fields not declared in `properties` are rejected, and unsupported or
+            invalid recipient results are returned as `null`.
         metadata (CreateCallRequestMetadata | Unset): Optional caller-owned metadata echoed on the call and webhook
             payloads. Use this for workflow ids, tenant ids, or internal correlation keys.
         webhook_url (str | Unset): Optional per-request HTTPS webhook URL. When provided, CALL-E sends terminal call
@@ -40,7 +71,9 @@ class CreateCallRequest:
     task: str
     recipients: list[CallTaskRecipientRequest] | None | Unset = UNSET
     result_schema: CreateCallRequestResultSchemaType0 | None | Unset = UNSET
-    recipient_result_schema: CreateCallRequestRecipientResultSchemaType0 | None | Unset = UNSET
+    recipient_result_schema: (
+        CreateCallRequestRecipientResultSchemaType0 | None | Unset
+    ) = UNSET
     metadata: CreateCallRequestMetadata | Unset = UNSET
     webhook_url: str | Unset = UNSET
 
@@ -48,7 +81,9 @@ class CreateCallRequest:
         from ..models.create_call_request_recipient_result_schema_type_0 import (
             CreateCallRequestRecipientResultSchemaType0,
         )
-        from ..models.create_call_request_result_schema_type_0 import CreateCallRequestResultSchemaType0
+        from ..models.create_call_request_result_schema_type_0 import (
+            CreateCallRequestResultSchemaType0,
+        )
 
         task = self.task
 
@@ -75,7 +110,9 @@ class CreateCallRequest:
         recipient_result_schema: dict[str, Any] | None | Unset
         if isinstance(self.recipient_result_schema, Unset):
             recipient_result_schema = UNSET
-        elif isinstance(self.recipient_result_schema, CreateCallRequestRecipientResultSchemaType0):
+        elif isinstance(
+            self.recipient_result_schema, CreateCallRequestRecipientResultSchemaType0
+        ):
             recipient_result_schema = self.recipient_result_schema.to_dict()
         else:
             recipient_result_schema = self.recipient_result_schema
@@ -113,12 +150,16 @@ class CreateCallRequest:
         from ..models.create_call_request_recipient_result_schema_type_0 import (
             CreateCallRequestRecipientResultSchemaType0,
         )
-        from ..models.create_call_request_result_schema_type_0 import CreateCallRequestResultSchemaType0
+        from ..models.create_call_request_result_schema_type_0 import (
+            CreateCallRequestResultSchemaType0,
+        )
 
         d = dict(src_dict)
         task = d.pop("task")
 
-        def _parse_recipients(data: object) -> list[CallTaskRecipientRequest] | None | Unset:
+        def _parse_recipients(
+            data: object,
+        ) -> list[CallTaskRecipientRequest] | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -129,7 +170,9 @@ class CreateCallRequest:
                 recipients_type_0 = []
                 _recipients_type_0 = data
                 for recipients_type_0_item_data in _recipients_type_0:
-                    recipients_type_0_item = CallTaskRecipientRequest.from_dict(recipients_type_0_item_data)
+                    recipients_type_0_item = CallTaskRecipientRequest.from_dict(
+                        recipients_type_0_item_data
+                    )
 
                     recipients_type_0.append(recipients_type_0_item)
 
@@ -140,7 +183,9 @@ class CreateCallRequest:
 
         recipients = _parse_recipients(d.pop("recipients", UNSET))
 
-        def _parse_result_schema(data: object) -> CreateCallRequestResultSchemaType0 | None | Unset:
+        def _parse_result_schema(
+            data: object,
+        ) -> CreateCallRequestResultSchemaType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -148,7 +193,9 @@ class CreateCallRequest:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                result_schema_type_0 = CreateCallRequestResultSchemaType0.from_dict(data)
+                result_schema_type_0 = CreateCallRequestResultSchemaType0.from_dict(
+                    data
+                )
 
                 return result_schema_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
@@ -157,7 +204,9 @@ class CreateCallRequest:
 
         result_schema = _parse_result_schema(d.pop("result_schema", UNSET))
 
-        def _parse_recipient_result_schema(data: object) -> CreateCallRequestRecipientResultSchemaType0 | None | Unset:
+        def _parse_recipient_result_schema(
+            data: object,
+        ) -> CreateCallRequestRecipientResultSchemaType0 | None | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
@@ -165,14 +214,20 @@ class CreateCallRequest:
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                recipient_result_schema_type_0 = CreateCallRequestRecipientResultSchemaType0.from_dict(data)
+                recipient_result_schema_type_0 = (
+                    CreateCallRequestRecipientResultSchemaType0.from_dict(data)
+                )
 
                 return recipient_result_schema_type_0
             except (TypeError, ValueError, AttributeError, KeyError):
                 pass
-            return cast(CreateCallRequestRecipientResultSchemaType0 | None | Unset, data)
+            return cast(
+                CreateCallRequestRecipientResultSchemaType0 | None | Unset, data
+            )
 
-        recipient_result_schema = _parse_recipient_result_schema(d.pop("recipient_result_schema", UNSET))
+        recipient_result_schema = _parse_recipient_result_schema(
+            d.pop("recipient_result_schema", UNSET)
+        )
 
         _metadata = d.pop("metadata", UNSET)
         metadata: CreateCallRequestMetadata | Unset

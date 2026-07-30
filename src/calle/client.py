@@ -1,6 +1,7 @@
 import httpx
 
 from calle.calls import CalleCalls
+from calle.goals import CalleGoals
 from calle.webhooks import CalleWebhooks
 
 
@@ -20,6 +21,7 @@ class CalleClient:
             timeout=timeout,
         )
         self.calls = CalleCalls(client=self._client)
+        self.goals = CalleGoals(client=self._client)
         self.webhooks = CalleWebhooks()
 
     def close(self) -> None:

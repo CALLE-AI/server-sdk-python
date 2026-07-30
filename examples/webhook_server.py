@@ -3,12 +3,8 @@ import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any
 
-from calle import CalleClient, CalleWebhookSignatureError
-
-
-client = CalleClient(api_key=os.environ.get("CALLE_API_KEY", "calle_dev_example"))
-webhook_secret = os.environ.get("CALLE_WEBHOOK_SECRET", "whsec_dev_example")
 port = int(os.environ.get("PORT", "3000"))
+processed_event_ids: set[str] = set()
 
 
 class WebhookHandler(BaseHTTPRequestHandler):
@@ -20,21 +16,47 @@ class WebhookHandler(BaseHTTPRequestHandler):
         raw_body = self.rfile.read(int(self.headers.get("content-length", "0")))
 
         try:
-            event = client.webhooks.unwrap(
-                raw_body=raw_body,
-                headers=dict(self.headers.items()),
-                secret=webhook_secret,
-            )
-        except CalleWebhookSignatureError:
-            self._send_json(400, {"error": "invalid_signature"})
+            parsed: Any = json.loads(raw_body)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            self._send_json(400, {"error": "invalid_json"})
+            return
+        if not isinstance(parsed, dict):
+            self._send_json(400, {"error": "invalid_event"})
+            return
+        event: dict[str, Any] = parsed
+
+        event_id = self.headers.get("CALL-E-Event-Id")
+        if not event_id or event.get("id") != event_id:
+            self._send_json(400, {"error": "invalid_event_id"})
+            return
+        event_type = event.get("type")
+        call = event.get("data")
+        if (
+            not isinstance(event_type, str)
+            or not isinstance(call, dict)
+            or not isinstance(call.get("id"), str)
+        ):
+            self._send_json(400, {"error": "invalid_event"})
+            return
+        call_id = call["id"]
+
+        if event_id in processed_event_ids:
+            self._send_json(200, {"received": True, "duplicate": True})
             return
 
-        if event["type"] == "call.completed":
+        # Use durable storage in production and persist the id before side effects.
+        processed_event_ids.add(event_id)
+
+        if event_type == "call.completed":
             print(
                 "Call completed",
                 {
-                    "call_id": event["data"]["id"],
-                    "result": event["data"].get("structured_result"),
+                    "call_id": call_id,
+                    "result": call.get("structured_result"),
+                    "summary": call.get("summary"),
+                    "task_completed": call.get("task_completed"),
+                    "completion_confidence": call.get("completion_confidence"),
+                    "evidence": call.get("evidence"),
                 },
             )
         else:
@@ -42,8 +64,8 @@ class WebhookHandler(BaseHTTPRequestHandler):
                 "CALL-E webhook event",
                 {
                     "id": event["id"],
-                    "type": event["type"],
-                    "call_id": event["data"]["id"],
+                    "type": event_type,
+                    "call_id": call_id,
                 },
             )
 

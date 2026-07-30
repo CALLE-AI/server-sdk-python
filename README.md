@@ -24,7 +24,7 @@ pip install calle-ai
 Pin the current stable release when your deployment process requires exact package reproducibility:
 
 ```bash
-pip install calle-ai==0.2.0
+pip install calle-ai==0.6.0
 ```
 
 Use a local checkout for development and package smoke tests:
@@ -49,17 +49,81 @@ Run the create-and-wait example from a local checkout:
 uv run python examples/create_and_wait.py
 ```
 
+Run a published Goal with an explicit Goal, phone, variables, and durable
+idempotency key:
+
+```bash
+export CALLE_GOAL_ID="<PUBLISHED_GOAL_ID>"
+export CALLE_GOAL_PHONE="<AUTHORIZED_E164_PHONE>"
+export CALLE_GOAL_VARIABLES='{"name":"Alex"}'
+export CALLE_IDEMPOTENCY_KEY="<DURABLE_WORKFLOW_KEY>"
+uv run python examples/run_goal_and_wait.py
+```
+
+To test against the test environment, explicitly set:
+
+```bash
+export CALLE_BASE_URL="https://test-api.heycall-e.com"
+```
+
 Run the webhook receiver example:
 
 ```bash
-export CALLE_WEBHOOK_SECRET="whsec_test_key"
 uv run python examples/webhook_server.py
 ```
 
-The webhook receiver listens on `POST /calle/webhook` and verifies
-`CALL-E-Timestamp` and `CALL-E-Signature` against the raw request body.
+The webhook receiver listens on `POST /calle/webhook` and processes terminal
+event JSON. CALL-E sends terminal events only after the post-call outcome and
+requested structured results are finalized.
+
+CALL-E webhook delivery does not use a webhook secret, `CALL-E-Timestamp`, or
+`CALL-E-Signature`. Use the required `CALL-E-Event-Id` header to deduplicate
+at-least-once deliveries before performing side effects. The receiver example
+parses JSON directly and checks that this header matches the body event id.
+
+The `client.webhooks.verify` and `client.webhooks.unwrap` methods implement the
+legacy signed-payload contract from SDK `0.2`. They remain available for source
+compatibility but are deprecated and are not compatible with current unsigned
+CALL-E deliveries.
 
 ## Quickstart
+
+Run a reusable published Goal. The Goal owns its input and result schemas;
+each Run supplies only a phone number, per-Run variables, and a durable
+idempotency key:
+
+```python
+import os
+from calle import CalleClient
+
+client = CalleClient(api_key=os.environ["CALLE_API_KEY"])
+
+goal = client.goals.get("goal_delivery_confirmation")
+print(goal["title"], goal["published_run_spec"]["input_schema"])
+
+run = client.goals.run_and_wait(
+    goal_id=goal["id"],
+    phone="+14155550100",
+    variables={
+        "customer_name": "Taylor",
+        "order_reference": "ORD-8472",
+        "delivery_window": "July 24, 2:00-4:00 PM",
+    },
+    idempotency_key="delivery:ORD-8472:confirm-window:v1",
+)
+
+if run["result"] is not None:
+    print(run["result"])
+else:
+    print(run["error"])
+```
+
+Persist the idempotency key before the first request and reuse it for network
+retries. `wait_for_result` returns when either `result` or `error` is non-null;
+an execution `status` of `completed` can still be waiting for result
+materialization.
+
+The generic one-shot call API remains available independently:
 
 ```python
 import os
@@ -96,16 +160,6 @@ print(call["task_completed"], call["completion_confidence"], call["evidence"])
 print(call["recipients"][0]["structured_result"])
 ```
 
-## Webhook Verification
-
-```python
-event = client.webhooks.unwrap(
-    raw_body=raw_body,
-    headers=headers,
-    secret=os.environ["CALLE_WEBHOOK_SECRET"],
-)
-```
-
 ## Release
 
 This repository publishes the Python distribution `calle-ai`. Application code
@@ -128,11 +182,12 @@ Manual stable PyPI publish:
 ```bash
 python -m venv .venv
 . .venv/bin/activate
-pip install calle-ai==0.2.0
-python -c 'from calle import CalleClient; print(CalleClient)'
+pip install calle-ai==0.6.0
+python -c 'from calle import CalleClient; c = CalleClient(api_key="smoke"); assert callable(c.goals.run_and_wait); c.close()'
 ```
 
-The current stable version is `0.2.0`. Do not reuse a previously published PyPI version.
+The current stable version is `0.6.0`. Do not reuse a previously published
+PyPI version.
 
 ## Project Documents
 

@@ -1,15 +1,20 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import Any, TypeVar, TYPE_CHECKING
 
 from attrs import define as _attrs_define
 
-from ..models.recipient_status import RecipientStatus, check_recipient_status
+
+from ..models.recipient_status import check_recipient_status
+from ..models.recipient_status import RecipientStatus
+from typing import cast
 
 if TYPE_CHECKING:
     from ..models.call_task_attempt import CallTaskAttempt
-    from ..models.call_task_recipient_structured_result_type_0 import CallTaskRecipientStructuredResultType0
+    from ..models.call_task_recipient_structured_result_type_0 import (
+        CallTaskRecipientStructuredResultType0,
+    )
 
 
 T = TypeVar("T", bound="CallTaskRecipient")
@@ -25,7 +30,10 @@ class CallTaskRecipient:
         region (None | str): Country or region code used for routing and compliance checks when available.
         status (RecipientStatus): Current lifecycle state for one recipient in a call task.
         structured_result (CallTaskRecipientStructuredResultType0 | None): Schema-valid structured result object
-            extracted for this recipient. `null` when no usable structured result object was produced.
+            extracted for this recipient using `recipient_result_schema`.
+
+            `null` means CALL-E could not produce a schema-valid result for this recipient from the terminal call evidence,
+            or no `recipient_result_schema` was provided.
         summary (None | str): Short human-readable summary for this recipient. `null` while the recipient is still
             running or when no useful summary is available.
         attempts (list[CallTaskAttempt]): Outbound dial attempts made for this recipient.
@@ -41,7 +49,9 @@ class CallTaskRecipient:
     attempts: list[CallTaskAttempt]
 
     def to_dict(self) -> dict[str, Any]:
-        from ..models.call_task_recipient_structured_result_type_0 import CallTaskRecipientStructuredResultType0
+        from ..models.call_task_recipient_structured_result_type_0 import (
+            CallTaskRecipientStructuredResultType0,
+        )
 
         id = self.id
 
@@ -89,7 +99,9 @@ class CallTaskRecipient:
     @classmethod
     def from_dict(cls: type[T], src_dict: Mapping[str, Any]) -> T:
         from ..models.call_task_attempt import CallTaskAttempt
-        from ..models.call_task_recipient_structured_result_type_0 import CallTaskRecipientStructuredResultType0
+        from ..models.call_task_recipient_structured_result_type_0 import (
+            CallTaskRecipientStructuredResultType0,
+        )
 
         d = dict(src_dict)
         id = d.pop("id")
@@ -112,13 +124,17 @@ class CallTaskRecipient:
 
         status = check_recipient_status(d.pop("status"))
 
-        def _parse_structured_result(data: object) -> CallTaskRecipientStructuredResultType0 | None:
+        def _parse_structured_result(
+            data: object,
+        ) -> CallTaskRecipientStructuredResultType0 | None:
             if data is None:
                 return data
             try:
                 if not isinstance(data, dict):
                     raise TypeError()
-                structured_result_type_0 = CallTaskRecipientStructuredResultType0.from_dict(data)
+                structured_result_type_0 = (
+                    CallTaskRecipientStructuredResultType0.from_dict(data)
+                )
 
                 return structured_result_type_0
             except (TypeError, ValueError, AttributeError, KeyError):

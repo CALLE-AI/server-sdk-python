@@ -1,6 +1,6 @@
+import hashlib
 import hmac
 import json
-import hashlib
 from typing import Any, Mapping
 
 from calle.errors import CalleWebhookSignatureError
@@ -8,10 +8,21 @@ from calle.errors import CalleWebhookSignatureError
 
 class CalleWebhooks:
     def verify(self, *, raw_body: bytes | str, timestamp: str, signature: str, secret: str) -> bool:
+        """Verify a legacy HMAC signature.
+
+        Deprecated: CALL-E no longer sends timestamp or signature headers. This
+        method remains available for integrations that use their own compatible
+        signing layer.
+        """
         expected = _signature(raw_body=raw_body, timestamp=timestamp, secret=secret)
         return hmac.compare_digest(signature, expected)
 
     def unwrap(self, *, raw_body: bytes | str, headers: Mapping[str, str], secret: str) -> dict[str, Any]:
+        """Verify and parse a legacy signed webhook payload.
+
+        Deprecated: current CALL-E webhooks are unsigned. This method retains the
+        SDK 0.2 trust boundary and must not be used to parse current deliveries.
+        """
         timestamp = _header(headers, "CALL-E-Timestamp")
         signature = _header(headers, "CALL-E-Signature")
         if timestamp is None or signature is None:

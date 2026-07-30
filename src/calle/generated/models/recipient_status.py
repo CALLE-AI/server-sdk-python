@@ -14,4 +14,6 @@ RECIPIENT_STATUS_VALUES: set[RecipientStatus] = {
 def check_recipient_status(value: str) -> RecipientStatus:
     if value in RECIPIENT_STATUS_VALUES:
         return value
-    raise TypeError(f"Unexpected value {value!r}. Expected one of {RECIPIENT_STATUS_VALUES!r}")
+    raise TypeError(
+        f"Unexpected value {value!r}. Expected one of {RECIPIENT_STATUS_VALUES!r}"
+    )

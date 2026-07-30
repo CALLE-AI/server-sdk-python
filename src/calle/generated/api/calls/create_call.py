@@ -3,11 +3,13 @@ from typing import Any
 
 import httpx
 
-from ... import errors
 from ...client import AuthenticatedClient, Client
+from ...types import Response, UNSET
+from ... import errors
+
 from ...models.create_call_request import CreateCallRequest
 from ...models.error_envelope import ErrorEnvelope
-from ...types import UNSET, Response, Unset
+from ...types import Unset
 
 
 def _get_kwargs(
@@ -32,7 +34,9 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | None:
+def _parse_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> ErrorEnvelope | None:
     if response.status_code == 400:
         response_400 = ErrorEnvelope.from_dict(response.json())
 
@@ -74,7 +78,9 @@ def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Res
         return None
 
 
-def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope]:
+def _build_response(
+    *, client: AuthenticatedClient | Client, response: httpx.Response
+) -> Response[ErrorEnvelope]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -91,7 +97,8 @@ def sync_detailed(
 ) -> Response[ErrorEnvelope]:
     """Create Call
 
-     Create an asynchronous call.
+     Create an asynchronous call. Use `result_schema` and `recipient_result_schema` to ask CALL-E to
+    extract structured JSON results from terminal call evidence.
 
     Args:
         idempotency_key (str | Unset):
@@ -125,7 +132,8 @@ def sync(
 ) -> ErrorEnvelope | None:
     """Create Call
 
-     Create an asynchronous call.
+     Create an asynchronous call. Use `result_schema` and `recipient_result_schema` to ask CALL-E to
+    extract structured JSON results from terminal call evidence.
 
     Args:
         idempotency_key (str | Unset):
@@ -154,7 +162,8 @@ async def asyncio_detailed(
 ) -> Response[ErrorEnvelope]:
     """Create Call
 
-     Create an asynchronous call.
+     Create an asynchronous call. Use `result_schema` and `recipient_result_schema` to ask CALL-E to
+    extract structured JSON results from terminal call evidence.
 
     Args:
         idempotency_key (str | Unset):
@@ -186,7 +195,8 @@ async def asyncio(
 ) -> ErrorEnvelope | None:
     """Create Call
 
-     Create an asynchronous call.
+     Create an asynchronous call. Use `result_schema` and `recipient_result_schema` to ask CALL-E to
+    extract structured JSON results from terminal call evidence.
 
     Args:
         idempotency_key (str | Unset):

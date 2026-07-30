@@ -6,13 +6,27 @@ from typing import Any, TypeVar
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
 
+
 T = TypeVar("T", bound="CreateCallRequestResultSchemaType0")
 
 
 @_attrs_define
 class CreateCallRequestResultSchemaType0:
-    """Optional JSON Schema object that defines the structured result CALL-E should extract for the whole call task. Object
-    schemas are strict by default; fields not declared in `properties` are rejected.
+    """Optional JSON Schema object that defines the structured result CALL-E should extract for the whole call task.
+
+    CALL-E passes the schema, including field `description` values, to the extraction model after the call reaches a
+    terminal state. Use descriptions to explain field meaning and enum selection logic, for example: "Use strong when
+    the prospect asks about pricing, demos, or next steps."
+
+    Descriptions guide extraction but are not hard validation rules. Hard validation comes from `type`, `required`,
+    `enum`, and `additionalProperties`.
+
+    Supported schema features are `type`, `properties`, `required`, `enum`, nested `object` fields, simple
+    `array.items`, `description`, and `additionalProperties: false`. Unsupported features include `$ref`, `oneOf`,
+    `anyOf`, `allOf`, recursive schemas, complex format validation, and `additionalProperties: true`.
+
+    Prefer string enums over booleans for business decisions that may be unclear, and include an `unknown` enum value
+    when the call may not provide enough evidence.
 
     """
 

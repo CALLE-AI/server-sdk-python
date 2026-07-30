@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import Any, TypeVar, TYPE_CHECKING
 
 from attrs import define as _attrs_define
 
-from ..models.event_list_object import EventListObject, check_event_list_object
 from ..types import UNSET, Unset
+
+from ..models.event_list_object import check_event_list_object
+from ..models.event_list_object import EventListObject
+from typing import cast
 
 if TYPE_CHECKING:
     from ..models.developer_event import DeveloperEvent

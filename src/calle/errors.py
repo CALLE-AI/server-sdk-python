@@ -33,6 +33,8 @@ class CalleConnectionError(Exception):
 
 
 class CalleWebhookSignatureError(Exception):
+    """Legacy signed-webhook validation error retained for SDK 0.2 compatibility."""
+
     pass
 
 

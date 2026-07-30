@@ -1,12 +1,15 @@
 from __future__ import annotations
 
-import datetime
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar, cast
+from typing import Any, TypeVar, TYPE_CHECKING
 
 from attrs import define as _attrs_define
 
-from ..models.attempt_status import AttemptStatus, check_attempt_status
+
+from ..models.attempt_status import AttemptStatus
+from ..models.attempt_status import check_attempt_status
+from typing import cast
+import datetime
 
 if TYPE_CHECKING:
     from ..models.call_transcript_turn import CallTranscriptTurn
@@ -152,7 +155,9 @@ class CallTaskAttempt:
         transcript_turns = []
         _transcript_turns = d.pop("transcript_turns")
         for transcript_turns_item_data in _transcript_turns:
-            transcript_turns_item = CallTranscriptTurn.from_dict(transcript_turns_item_data)
+            transcript_turns_item = CallTranscriptTurn.from_dict(
+                transcript_turns_item_data
+            )
 
             transcript_turns.append(transcript_turns_item)
 
