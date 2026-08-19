@@ -37,6 +37,7 @@ QUEUED_RUN = {
     "id": "rgrp_delivery_8472",
     "goal_id": "goal_delivery",
     "run_id": "run_delivery_8472",
+    "call_id": None,
     "run_spec": {"id": "rspec_delivery_v4", "version": 4},
     "status": "queued",
     "result": None,
@@ -53,6 +54,7 @@ def test_generated_goal_models_parse_public_api_examples() -> None:
     assert goal.id == "goal_delivery"
     assert goal.published_run_spec.version == 4
     assert run.id == "rgrp_delivery_8472"
+    assert run.call_id is None
     assert run.run_spec.id == "rspec_delivery_v4"
 
 
@@ -150,6 +152,7 @@ def test_wait_for_result_ignores_completed_status_until_result_exists() -> None:
     }
     succeeded = {
         **materializing,
+        "call_id": "calling_call_delivery_8472",
         "result": {"delivery_outcome": "confirmed"},
     }
     route = respx.get("https://api.heycall-e.com/v1/goals/goal_delivery/runs/rgrp_delivery_8472").mock(
@@ -168,6 +171,7 @@ def test_wait_for_result_ignores_completed_status_until_result_exists() -> None:
     )
 
     assert run["result"] == {"delivery_outcome": "confirmed"}
+    assert run["call_id"] == "calling_call_delivery_8472"
     assert route.call_count == 2
 
 

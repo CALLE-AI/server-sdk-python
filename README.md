@@ -24,7 +24,7 @@ pip install calle-ai
 Pin the current stable release when your deployment process requires exact package reproducibility:
 
 ```bash
-pip install calle-ai==0.6.0
+pip install calle-ai==0.7.0
 ```
 
 Use a local checkout for development and package smoke tests:
@@ -113,6 +113,7 @@ run = client.goals.run_and_wait(
 )
 
 if run["result"] is not None:
+    print(run["call_id"])
     print(run["result"])
 else:
     print(run["error"])
@@ -182,11 +183,11 @@ Manual stable PyPI publish:
 ```bash
 python -m venv .venv
 . .venv/bin/activate
-pip install calle-ai==0.6.0
+pip install calle-ai==0.7.0
 python -c 'from calle import CalleClient; c = CalleClient(api_key="smoke"); assert callable(c.goals.run_and_wait); c.close()'
 ```
 
-The current stable version is `0.6.0`. Do not reuse a previously published
+The current stable version is `0.7.0`. Do not reuse a previously published
 PyPI version.
 
 ## Project Documents

@@ -58,11 +58,6 @@ def _parse_response(
 
         return response_403
 
-    if response.status_code == 409:
-        response_409 = ErrorEnvelope.from_dict(response.json())
-
-        return response_409
-
     if response.status_code == 429:
         response_429 = ErrorEnvelope.from_dict(response.json())
 
@@ -106,6 +101,8 @@ def sync_detailed(
     `after` value; clients must not parse or construct cursor values. `title` and `description`
     help operators recognize each published workflow, but integrations should still store the
     intended `goal_id` at publish time and must not execute the first list item blindly.
+    Candidates whose published RunSpec is not execution-ready are omitted without preventing
+    later executable Goals from appearing in the page.
 
     Args:
         limit (int | Unset):  Default: 20.
@@ -147,6 +144,8 @@ def sync(
     `after` value; clients must not parse or construct cursor values. `title` and `description`
     help operators recognize each published workflow, but integrations should still store the
     intended `goal_id` at publish time and must not execute the first list item blindly.
+    Candidates whose published RunSpec is not execution-ready are omitted without preventing
+    later executable Goals from appearing in the page.
 
     Args:
         limit (int | Unset):  Default: 20.
@@ -183,6 +182,8 @@ async def asyncio_detailed(
     `after` value; clients must not parse or construct cursor values. `title` and `description`
     help operators recognize each published workflow, but integrations should still store the
     intended `goal_id` at publish time and must not execute the first list item blindly.
+    Candidates whose published RunSpec is not execution-ready are omitted without preventing
+    later executable Goals from appearing in the page.
 
     Args:
         limit (int | Unset):  Default: 20.
@@ -222,6 +223,8 @@ async def asyncio(
     `after` value; clients must not parse or construct cursor values. `title` and `description`
     help operators recognize each published workflow, but integrations should still store the
     intended `goal_id` at publish time and must not execute the first list item blindly.
+    Candidates whose published RunSpec is not execution-ready are omitted without preventing
+    later executable Goals from appearing in the page.
 
     Args:
         limit (int | Unset):  Default: 20.

@@ -49,7 +49,7 @@ def main() -> None:
         "unexpected title",
     )
     assert_contract(
-        spec.get("info", {}).get("version") == "0.6.0",
+        spec.get("info", {}).get("version") == "0.7.0",
         "unexpected API version",
     )
 
@@ -82,7 +82,7 @@ def main() -> None:
             "method": "get",
             "operation_id": "listGoals",
             "response_schema": "#/components/schemas/GoalList",
-            "error_statuses": ["400", "401", "403", "409", "429", "500"],
+            "error_statuses": ["400", "401", "403", "429", "500"],
         },
         {
             "path": "/v1/goals/{goal_id}",
@@ -319,6 +319,7 @@ def main() -> None:
         "id",
         "goal_id",
         "run_id",
+        "call_id",
         "run_spec",
         "status",
         "result",
@@ -330,6 +331,10 @@ def main() -> None:
             property_name in goal_run_properties,
             f"GoalRun missing {property_name}",
         )
+    assert_contract(
+        set(goal_run_properties["call_id"].get("type", [])) == {"string", "null"},
+        "GoalRun.call_id must be nullable string",
+    )
 
     goal_run_parameter_refs = parameter_refs(
         spec,
