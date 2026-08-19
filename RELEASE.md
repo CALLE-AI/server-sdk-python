@@ -13,7 +13,7 @@ calle-ai==0.1.0b1
 The current production PyPI release version is:
 
 ```text
-calle-ai==0.6.0
+calle-ai==0.7.0
 ```
 
 For this release, use token-based PyPI publishing with the GitHub Actions secret `PYPI_API_TOKEN`.
@@ -67,7 +67,7 @@ tmpdir="$(mktemp -d)"
 python -m venv "$tmpdir/.venv"
 . "$tmpdir/.venv/bin/activate"
 python -m pip install --upgrade pip
-python -m pip install calle-ai==0.6.0
+python -m pip install calle-ai==0.7.0
 python -c 'from calle import CalleClient; c = CalleClient(api_key="smoke"); assert callable(c.goals.run_and_wait); c.close()'
 ```
 

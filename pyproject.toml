@@ -1,6 +1,6 @@
 [project]
 name = "calle-ai"
-version = "0.6.0"
+version = "0.7.0"
 description = "Python server SDK for the CALL-E Developer API."
 readme = "README.md"
 requires-python = ">=3.11"

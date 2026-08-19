@@ -33,6 +33,10 @@ class GoalRun:
             id (str): Public Goal Run identity. Persist this value and use it as `goal_run_id` when polling.
             goal_id (str): Goal identity supplied in the create path.
             run_id (str): Internal execution member exposed for correlation; do not use it in the Goal Run polling path.
+            call_id (None | str): Calling call identifier selected for this Goal Run when that trusted fact is available,
+                or `null` before a call identifier is persisted or when no identifier is available. This
+                is different from the Goal Run `id` and nested `run_id`; it does not expose other provider
+                diagnostics and must not be treated as an independent answered-call boolean.
             run_spec (GoalRunSpecSnapshot): Exact immutable RunSpec identity and version pinned by a Goal Run.
             status (GoalRunStatus): Stable telephone execution state. `queued` and `in_progress` are non-terminal;
                 `completed`,
@@ -53,6 +57,7 @@ class GoalRun:
     id: str
     goal_id: str
     run_id: str
+    call_id: None | str
     run_spec: GoalRunSpecSnapshot
     status: GoalRunStatus
     result: GoalRunResultType0 | None
@@ -71,6 +76,9 @@ class GoalRun:
         goal_id = self.goal_id
 
         run_id = self.run_id
+
+        call_id: None | str
+        call_id = self.call_id
 
         run_spec = self.run_spec.to_dict()
 
@@ -104,6 +112,7 @@ class GoalRun:
                 "id": id,
                 "goal_id": goal_id,
                 "run_id": run_id,
+                "call_id": call_id,
                 "run_spec": run_spec,
                 "status": status,
                 "result": result,
@@ -129,6 +138,13 @@ class GoalRun:
         goal_id = d.pop("goal_id")
 
         run_id = d.pop("run_id")
+
+        def _parse_call_id(data: object) -> None | str:
+            if data is None:
+                return data
+            return cast(None | str, data)
+
+        call_id = _parse_call_id(d.pop("call_id"))
 
         run_spec = GoalRunSpecSnapshot.from_dict(d.pop("run_spec"))
 
@@ -186,6 +202,7 @@ class GoalRun:
             id=id,
             goal_id=goal_id,
             run_id=run_id,
+            call_id=call_id,
             run_spec=run_spec,
             status=status,
             result=result,
