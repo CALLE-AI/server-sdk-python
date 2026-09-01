@@ -2,14 +2,15 @@
 
 ## Supported versions
 
-The SDK is in Phase 1 beta preparation. Security fixes are applied to the
-current beta line.
+Security fixes are applied to the current release line. Users should upgrade
+to the latest published version before reporting an issue that may already be
+fixed.
 
 ## Reporting a vulnerability
 
-Do not open a public issue for suspected vulnerabilities. Use GitHub private
-vulnerability reporting if it is enabled for this repository; otherwise contact
-the CALL-E maintainers directly.
+Do not open a public issue for suspected vulnerabilities. Email
+`support@heycall-e.com` with the subject `Security report`. You may also use
+GitHub private vulnerability reporting if it is enabled for this repository.
 
 Send a private report to the CALL-E maintainers with:
 

@@ -9,6 +9,10 @@ trusted backend services, workers, and automation systems.
 bash scripts/validate.sh
 ```
 
+This command verifies the OpenAPI contract, tests, lint, types, examples,
+public-repository hygiene, distribution metadata, packaged license files, and
+fresh wheel and source-distribution installs.
+
 ## Local examples
 
 ```bash
@@ -84,3 +88,22 @@ handling, webhook event handling, and any changed API contract surface.
 
 Do not add browser examples or patterns that expose CALL-E API keys to client
 code.
+
+Update [CHANGELOG.md](./CHANGELOG.md) when a change affects package users. Pull
+request titles, descriptions, tracked paths, and tracked text must not contain
+private collaboration links, unencrypted IP URLs, or references to unconfirmed
+public repositories in the CALL-E GitHub organization.
+
+Run the standalone hygiene check with:
+
+```bash
+python3 scripts/check_public_repo_hygiene.py
+```
+
+The allowlist in that script contains only repositories confirmed for public
+use. Add a repository only after confirming that it is public.
+
+## License
+
+By submitting a contribution, you agree that it may be distributed under the
+[MIT License](./LICENSE).

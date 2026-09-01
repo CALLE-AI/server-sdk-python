@@ -1,5 +1,10 @@
 # calle-ai
 
+[![PyPI version](https://img.shields.io/pypi/v/calle-ai)](https://pypi.org/project/calle-ai/)
+[![Python versions](https://img.shields.io/pypi/pyversions/calle-ai)](https://pypi.org/project/calle-ai/)
+[![CI](https://github.com/CALLE-AI/server-sdk-python/actions/workflows/ci.yml/badge.svg)](https://github.com/CALLE-AI/server-sdk-python/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+
 Python server SDK for the CALL-E Developer API.
 
 Use this SDK from backend services, workers, and other trusted server
@@ -11,7 +16,16 @@ environments. Do not expose CALL-E API keys in browser code.
 - SDK guide: <https://docs.heycall-e.com/#/sdks>
 - API Reference: <https://docs.heycall-e.com/#/api-reference>
 - Webhooks: <https://docs.heycall-e.com/#/webhooks>
-- Changelog: <https://docs.heycall-e.com/#/changelog>
+- Product changelog: <https://docs.heycall-e.com/#/changelog>
+- TypeScript SDK: <https://github.com/CALLE-AI/server-sdk-typescript>
+
+## SDK surface
+
+- `client.calls` creates, reads, and polls call tasks and lists call events.
+- `client.goals` lists and reads published Goals and runs them with structured
+  results.
+- `examples/webhook_server.py` shows how to receive current terminal webhook
+  events.
 
 ## Install
 
@@ -21,16 +35,37 @@ Install the stable package from PyPI:
 pip install calle-ai
 ```
 
-Pin the current stable release when your deployment process requires exact package reproducibility:
-
-```bash
-pip install calle-ai==0.7.0
-```
+For reproducible deployments, pin the package version selected by your
+dependency-management workflow.
 
 Use a local checkout for development and package smoke tests:
 
 ```bash
 bash scripts/validate.sh
+```
+
+Python 3.11 or newer is required.
+
+## Configuration
+
+Create one `CalleClient` and close it when your process no longer needs it:
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `api_key` | Yes | CALL-E API key. Load it from a server-side secret store or environment variable. |
+| `base_url` | No | API base URL. Defaults to `https://api.heycall-e.com`. |
+| `timeout` | No | HTTP request timeout in seconds. Defaults to `30.0`. |
+| `http_client` | No | Configured `httpx.Client` used as-is. It must define the required base URL, authentication, transport, and timeout. |
+
+With the default HTTP client, use `CalleClient` as a context manager so the SDK
+closes its connection pool:
+
+```python
+import os
+from calle import CalleClient
+
+with CalleClient(api_key=os.environ["CALLE_API_KEY"]) as client:
+    call = client.calls.get("call_123")
 ```
 
 ## Examples
@@ -161,37 +196,46 @@ print(call["task_completed"], call["completion_confidence"], call["evidence"])
 print(call["recipients"][0]["structured_result"])
 ```
 
+## Error handling
+
+The SDK exports errors for API responses, authentication, rate limits,
+timeouts, and connection failures:
+
+```python
+import os
+from calle import CalleAPIError, CalleClient
+
+with CalleClient(api_key=os.environ["CALLE_API_KEY"]) as client:
+    try:
+        client.calls.get("call_123")
+    except CalleAPIError as error:
+        print(error.status_code, error.code, error.details)
+        raise
+```
+
 ## Release
 
 This repository publishes the Python distribution `calle-ai`. Application code
 imports it as `calle`.
 
-See [RELEASE.md](./RELEASE.md) for the release checklist, GitHub Actions
-workflow, and post-publish install smoke test.
+Merging to `main` runs CI and does not publish the package. A stable publish is
+triggered only by publishing a GitHub Release with a matching `vX.Y.Z` tag;
+manually running the workflow performs a dry run. See [RELEASE.md](./RELEASE.md)
+for release gates and registry checks.
 
-Prerequisites:
+## Support and security
 
-- Create a PyPI API token and add it to this repository as the GitHub Actions secret `PYPI_API_TOKEN`.
-- Keep the package version in `pyproject.toml` unique before each publish.
+Use [GitHub Issues](https://github.com/CALLE-AI/server-sdk-python/issues) for
+reproducible SDK bugs and feature requests. Do not report vulnerabilities in a
+public issue. Follow [SECURITY.md](./SECURITY.md) for private reporting.
 
-Manual stable PyPI publish:
+## License
 
-1. Open the `Publish Python package` GitHub Actions workflow.
-2. Run it from `main` with repository `pypi` and auth `token`.
-3. Verify install in a temporary environment:
-
-```bash
-python -m venv .venv
-. .venv/bin/activate
-pip install calle-ai==0.7.0
-python -c 'from calle import CalleClient; c = CalleClient(api_key="smoke"); assert callable(c.goals.run_and_wait); c.close()'
-```
-
-The current stable version is `0.7.0`. Do not reuse a previously published
-PyPI version.
+This project is licensed under the [MIT License](./LICENSE).
 
 ## Project Documents
 
 - [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [CHANGELOG.md](./CHANGELOG.md)
 - [SECURITY.md](./SECURITY.md)
 - [RELEASE.md](./RELEASE.md)

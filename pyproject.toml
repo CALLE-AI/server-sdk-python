@@ -3,6 +3,8 @@ name = "calle-ai"
 version = "0.7.0"
 description = "Python server SDK for the CALL-E Developer API."
 readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 keywords = ["calle", "call-e", "voice-ai", "server-sdk", "webhooks"]
 classifiers = [
@@ -42,6 +44,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 testpaths = ["tests"]
 
 [tool.ruff]

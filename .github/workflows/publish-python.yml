@@ -1,140 +1,312 @@
 name: Publish Python package
 
 on:
+  release:
+    types: [published]
   workflow_dispatch:
-    inputs:
-      repository:
-        description: Python package index to publish.
-        required: true
-        default: testpypi
-        type: choice
-        options:
-          - testpypi
-          - pypi
-      auth:
-        description: Release identity to use.
-        required: true
-        default: token
-        type: choice
-        options:
-          - token
-          - trusted-publishing
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.repository }}
+    outputs:
+      package_version: ${{ steps.package.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Validate release source and package version
+        id: package
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name || '' }}
+          RELEASE_PRERELEASE: ${{ github.event.release.prerelease || false }}
+        run: |
+          set -euo pipefail
+
+          package_version="$(python3 -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
+          echo "version=$package_version" >> "$GITHUB_OUTPUT"
+
+          if [ "$EVENT_NAME" != "release" ]; then
+            echo "Manual run: validating distributions only; nothing will be published."
+            exit 0
+          fi
+
+          if [ "$RELEASE_PRERELEASE" = "true" ]; then
+            echo "::error::Prereleases are not published by this stable release workflow."
+            exit 1
+          fi
+
+          if [[ ! "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::The GitHub Release tag must match vX.Y.Z."
+            exit 1
+          fi
+
+          if [ "${RELEASE_TAG#v}" != "$package_version" ]; then
+            echo "::error::The release tag does not match the pyproject.toml version."
+            exit 1
+          fi
+
+          git fetch --no-tags origin "+refs/heads/main:refs/remotes/origin/main"
+          tag_commit="$(git rev-parse --verify "refs/tags/$RELEASE_TAG^{commit}")"
+          if [ "$tag_commit" != "$(git rev-parse HEAD)" ]; then
+            echo "::error::The checked-out commit does not match the release tag."
+            exit 1
+          fi
+          if ! git merge-base --is-ancestor "$tag_commit" refs/remotes/origin/main; then
+            echo "::error::The release tag commit is not contained in origin/main."
+            exit 1
+          fi
+
+          pypi_url="https://pypi.org/pypi/calle-ai/${package_version}/json"
+          if ! pypi_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "$pypi_url")"; then
+            echo "::error::Could not check whether the package version already exists on PyPI."
+            exit 1
+          fi
+          if [ "$pypi_status" = "200" ]; then
+            echo "::error::The package version already exists on PyPI."
+            exit 1
+          fi
+          if [ "$pypi_status" != "404" ]; then
+            echo "::error::PyPI returned unexpected status $pypi_status during the version preflight."
+            exit 1
+          fi
+
+      - name: Setup Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        with:
+          enable-cache: true
+
+      - name: Build and validate distributions
+        run: bash scripts/validate.sh
+
+      - name: Upload validated distributions
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: python-distributions
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+            dist/SHA256SUMS
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    environment: pypi
 
     permissions:
       contents: read
       id-token: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Setup Python
-        uses: actions/setup-python@v6
+      - name: Download validated distributions
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
-          python-version: "3.11"
+          name: python-distributions
+          path: release-dist/
 
-      - name: Setup uv
-        uses: astral-sh/setup-uv@v8.1.0
-        with:
-          enable-cache: true
-
-      - name: Run validation
-        run: bash scripts/validate.sh
-
-      - name: Publish with package index token
-        if: inputs.auth == 'token'
+      - name: Revalidate downloaded distributions
         env:
-          PYPI_API_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
-          TEST_PYPI_API_TOKEN: ${{ secrets.TEST_PYPI_API_TOKEN }}
+          PACKAGE_VERSION: ${{ needs.build.outputs.package_version }}
         run: |
           set -euo pipefail
 
-          if [ "${{ inputs.repository }}" = "pypi" ]; then
-            token="$PYPI_API_TOKEN"
-            repository_url="https://upload.pypi.org/legacy/"
-          else
-            token="$TEST_PYPI_API_TOKEN"
-            repository_url="https://test.pypi.org/legacy/"
-          fi
+          python3 - <<'PY'
+          import hashlib
+          import os
+          import re
+          import tarfile
+          import zipfile
+          from email.parser import BytesParser
+          from pathlib import Path, PurePosixPath
 
-          if [ -z "$token" ]; then
-            echo "::error::Missing package index token for ${{ inputs.repository }}."
+          directory = Path("release-dist")
+          expected_version = os.environ["PACKAGE_VERSION"]
+          expected_license = b"""MIT License
+
+          Copyright (c) 2026 CALL-E, Inc.
+
+          Permission is hereby granted, free of charge, to any person obtaining a copy
+          of this software and associated documentation files (the "Software"), to deal
+          in the Software without restriction, including without limitation the rights
+          to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+          copies of the Software, and to permit persons to whom the Software is
+          furnished to do so, subject to the following conditions:
+
+          The above copyright notice and this permission notice shall be included in all
+          copies or substantial portions of the Software.
+
+          THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+          IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+          FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+          AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+          LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+          OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+          SOFTWARE.
+          """
+
+          entries = list(directory.iterdir())
+          if any(not entry.is_file() for entry in entries):
+              raise SystemExit("artifact directory contains a non-file entry")
+          wheels = [entry for entry in entries if entry.suffix == ".whl"]
+          sdists = [entry for entry in entries if entry.name.endswith(".tar.gz")]
+          if len(wheels) != 1 or len(sdists) != 1:
+              raise SystemExit("artifact must contain one wheel and one source archive")
+
+          artifact_files = (wheels[0], sdists[0])
+          expected_names = {path.name for path in artifact_files} | {"SHA256SUMS"}
+          if {entry.name for entry in entries} != expected_names:
+              raise SystemExit("artifact contains an unexpected file set")
+
+          manifest_pattern = re.compile(r"([0-9a-f]{64})  ([^/\s]+)")
+          checksums = {}
+          for line in (directory / "SHA256SUMS").read_text(encoding="utf-8").splitlines():
+              match = manifest_pattern.fullmatch(line)
+              if match is None or match.group(2) in checksums:
+                  raise SystemExit("checksum manifest contains an invalid entry")
+              checksums[match.group(2)] = match.group(1)
+          if set(checksums) != {path.name for path in artifact_files}:
+              raise SystemExit("checksum manifest does not match the artifact file set")
+          for path in artifact_files:
+              if hashlib.sha256(path.read_bytes()).hexdigest() != checksums[path.name]:
+                  raise SystemExit(f"checksum mismatch: {path.name}")
+
+          with zipfile.ZipFile(wheels[0]) as archive:
+              metadata_names = [name for name in archive.namelist() if name.endswith(".dist-info/METADATA")]
+              license_names = [
+                  name
+                  for name in archive.namelist()
+                  if PurePosixPath(name).name == "LICENSE" and ".dist-info/licenses/" in name
+              ]
+              if len(metadata_names) != 1 or len(license_names) != 1:
+                  raise SystemExit("wheel metadata or license file set is invalid")
+              metadata = BytesParser().parsebytes(archive.read(metadata_names[0]))
+              if (
+                  metadata["Name"] != "calle-ai"
+                  or metadata["Version"] != expected_version
+                  or metadata["License-Expression"] != "MIT"
+              ):
+                  raise SystemExit("wheel package metadata does not match the release")
+              if archive.read(license_names[0]) != expected_license:
+                  raise SystemExit("wheel does not contain the expected MIT license")
+
+          with tarfile.open(sdists[0], mode="r:gz") as archive:
+              files = [member for member in archive.getmembers() if member.isfile()]
+              metadata_members = [member for member in files if PurePosixPath(member.name).name == "PKG-INFO"]
+              license_members = [member for member in files if PurePosixPath(member.name).name == "LICENSE"]
+              if len(metadata_members) != 1 or len(license_members) != 1:
+                  raise SystemExit("source archive metadata or license file set is invalid")
+              metadata_stream = archive.extractfile(metadata_members[0])
+              license_stream = archive.extractfile(license_members[0])
+              if metadata_stream is None or license_stream is None:
+                  raise SystemExit("source archive metadata or license could not be read")
+              metadata = BytesParser().parsebytes(metadata_stream.read())
+              if (
+                  metadata["Name"] != "calle-ai"
+                  or metadata["Version"] != expected_version
+                  or metadata["License-Expression"] != "MIT"
+              ):
+                  raise SystemExit("source archive package metadata does not match the release")
+              if license_stream.read() != expected_license:
+                  raise SystemExit("source archive does not contain the expected MIT license")
+          PY
+
+          rm release-dist/SHA256SUMS
+
+      - name: Confirm version is still unpublished
+        env:
+          PACKAGE_VERSION: ${{ needs.build.outputs.package_version }}
+        run: |
+          set -euo pipefail
+
+          pypi_url="https://pypi.org/pypi/calle-ai/${PACKAGE_VERSION}/json"
+          if ! pypi_status="$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' "$pypi_url")"; then
+            echo "::error::Could not check whether the package version already exists on PyPI."
+            exit 1
+          fi
+          if [ "$pypi_status" != "404" ]; then
+            echo "::error::PyPI must return 404 immediately before upload; received $pypi_status."
             exit 1
           fi
 
-          TWINE_USERNAME="__token__" TWINE_PASSWORD="$token" \
-            uvx twine upload --repository-url "$repository_url" dist/*
-
-      - name: Publish to TestPyPI with Trusted Publishing
-        if: inputs.auth == 'trusted-publishing' && inputs.repository == 'testpypi'
-        uses: pypa/gh-action-pypi-publish@release/v1
-        with:
-          repository-url: https://test.pypi.org/legacy/
-
       - name: Publish to PyPI with Trusted Publishing
-        if: inputs.auth == 'trusted-publishing' && inputs.repository == 'pypi'
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
+        with:
+          packages-dir: release-dist/
 
-      - name: Verify published package
+      - name: Record irreversible publish boundary
+        run: echo "PyPI upload completed. A later verification failure does not undo publication."
+
+  verify:
+    if: github.event_name == 'release'
+    needs: [build, publish]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Setup Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+
+      - name: Verify registry metadata
+        env:
+          PACKAGE_VERSION: ${{ needs.build.outputs.package_version }}
         run: |
           set -euo pipefail
 
-          version="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
-          if [ "${{ inputs.repository }}" = "pypi" ]; then
-            url="https://pypi.org/pypi/calle-ai/${version}/json"
-          else
-            url="https://test.pypi.org/pypi/calle-ai/${version}/json"
-          fi
-
+          url="https://pypi.org/pypi/calle-ai/${PACKAGE_VERSION}/json"
           for attempt in 1 2 3 4 5 6 7 8 9 10; do
             if curl --fail --silent --show-error "$url" >/dev/null; then
               exit 0
             fi
-
-            echo "Package version metadata is not visible yet, retrying in 10s..."
+            echo "Package metadata is not visible yet; retrying in 10 seconds."
             sleep 10
           done
 
-          echo "::error::Published package version metadata did not become visible in time."
+          echo "::error::Package metadata is not visible. The upload may still have succeeded; check PyPI before retrying the release."
           exit 1
 
       - name: Smoke test published package install
+        env:
+          PACKAGE_VERSION: ${{ needs.build.outputs.package_version }}
         run: |
           set -euo pipefail
 
-          version="$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')"
-
           smoke_dir="$(mktemp -d)"
+          trap 'rm -rf "$smoke_dir"' EXIT
           python -m venv "$smoke_dir/.venv"
           . "$smoke_dir/.venv/bin/activate"
           python -m pip install --upgrade pip
 
           installed=false
           for attempt in 1 2 3 4 5 6 7 8 9 10; do
-            if [ "${{ inputs.repository }}" = "pypi" ]; then
-              if python -m pip install "calle-ai==$version"; then
-                installed=true
-                break
-              fi
-            elif python -m pip install \
-              --index-url https://test.pypi.org/simple/ \
-              --extra-index-url https://pypi.org/simple \
-              "calle-ai==$version"; then
+            if python -m pip install --no-cache-dir "calle-ai==$PACKAGE_VERSION"; then
               installed=true
               break
             fi
-
-            echo "Package install is not available yet, retrying in 10s..."
+            echo "Package install is not available yet; retrying in 10 seconds."
             sleep 10
           done
 
           if [ "$installed" != "true" ]; then
-            echo "::error::Published package install did not become available in time."
+            echo "::error::Install smoke test failed. The upload may still have succeeded; check PyPI before retrying the release."
             exit 1
           fi
 
