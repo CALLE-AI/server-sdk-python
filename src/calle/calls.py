@@ -1,5 +1,6 @@
 import time
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -40,11 +41,11 @@ class CalleCalls:
         return self._request("POST", "/v1/calls", json=payload, headers=headers)
 
     def get(self, call_id: str) -> JsonObject:
-        return self._request("GET", f"/v1/calls/{call_id}")
+        return self._request("GET", _call_path(call_id))
 
     def list_events(self, call_id: str, *, cursor: str | None = None, limit: int | None = None) -> JsonObject:
         params = {key: value for key, value in {"cursor": cursor, "limit": limit}.items() if value is not None}
-        return self._request("GET", f"/v1/calls/{call_id}/events", params=params)
+        return self._request("GET", f"{_call_path(call_id)}/events", params=params)
 
     def wait_for_result(
         self,
@@ -94,3 +95,8 @@ def _normalize_recipient(recipient: JsonObject) -> JsonObject:
     normalized = {key: value for key, value in recipient.items() if key != "phone"}
     normalized["phones"] = [phone] if phone is not None else []
     return normalized
+
+
+def _call_path(call_id: str) -> str:
+    encoded_call_id = quote(call_id, safe="").replace(".", "%2E")
+    return f"/v1/calls/{encoded_call_id}"

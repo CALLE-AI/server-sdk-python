@@ -1,10 +1,22 @@
+import hashlib
 import json
 import os
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any
 
 port = int(os.environ.get("PORT", "3000"))
-processed_event_ids: set[str] = set()
+try:
+    max_request_body_bytes = int(
+        os.environ.get("CALLE_WEBHOOK_MAX_BODY_BYTES", "10485760")
+    )
+except ValueError:
+    raise ValueError(
+        "CALLE_WEBHOOK_MAX_BODY_BYTES must be a positive integer."
+    ) from None
+if max_request_body_bytes <= 0:
+    raise ValueError("CALLE_WEBHOOK_MAX_BODY_BYTES must be a positive integer.")
+max_processed_event_ids = 10_000
+processed_event_ids: dict[bytes, None] = {}
 
 
 class WebhookHandler(BaseHTTPRequestHandler):
@@ -13,7 +25,27 @@ class WebhookHandler(BaseHTTPRequestHandler):
             self._send_json(404, {"error": "not_found"})
             return
 
-        raw_body = self.rfile.read(int(self.headers.get("content-length", "0")))
+        content_lengths = self.headers.get_all("content-length", [])
+        if (
+            len(content_lengths) != 1
+            or not content_lengths[0].isascii()
+            or not content_lengths[0].isdigit()
+        ):
+            self.close_connection = True
+            self._send_json(400, {"error": "invalid_content_length"})
+            return
+        try:
+            content_length = int(content_lengths[0])
+        except ValueError:
+            self.close_connection = True
+            self._send_json(400, {"error": "invalid_content_length"})
+            return
+        if content_length > max_request_body_bytes:
+            self.close_connection = True
+            self._send_json(413, {"error": "payload_too_large"})
+            return
+
+        raw_body = self.rfile.read(content_length)
 
         try:
             parsed: Any = json.loads(raw_body)
@@ -29,6 +61,7 @@ class WebhookHandler(BaseHTTPRequestHandler):
         if not event_id or event.get("id") != event_id:
             self._send_json(400, {"error": "invalid_event_id"})
             return
+        event_key = hashlib.sha256(event_id.encode()).digest()
         event_type = event.get("type")
         call = event.get("data")
         if (
@@ -40,12 +73,14 @@ class WebhookHandler(BaseHTTPRequestHandler):
             return
         call_id = call["id"]
 
-        if event_id in processed_event_ids:
+        if event_key in processed_event_ids:
             self._send_json(200, {"received": True, "duplicate": True})
             return
 
         # Use durable storage in production and persist the id before side effects.
-        processed_event_ids.add(event_id)
+        processed_event_ids[event_key] = None
+        if len(processed_event_ids) > max_processed_event_ids:
+            processed_event_ids.pop(next(iter(processed_event_ids)))
 
         if event_type == "call.completed":
             print(

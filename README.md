@@ -95,10 +95,10 @@ export CALLE_IDEMPOTENCY_KEY="<DURABLE_WORKFLOW_KEY>"
 uv run python examples/run_goal_and_wait.py
 ```
 
-To test against the test environment, explicitly set:
+To use an approved non-production environment, explicitly set:
 
 ```bash
-export CALLE_BASE_URL="https://test-api.heycall-e.com"
+export CALLE_BASE_URL="<APPROVED_TEST_API_BASE_URL>"
 ```
 
 Run the webhook receiver example:
@@ -115,6 +115,13 @@ CALL-E webhook delivery does not use a webhook secret, `CALL-E-Timestamp`, or
 `CALL-E-Signature`. Use the required `CALL-E-Event-Id` header to deduplicate
 at-least-once deliveries before performing side effects. The receiver example
 parses JSON directly and checks that this header matches the body event id.
+It defaults to a 10 MiB request-body limit and returns `413` for larger
+payloads. Set `CALLE_WEBHOOK_MAX_BODY_BYTES` to match your ingress limits.
+
+The bounded in-memory deduplication cache is only for local example use and
+retains the latest 10,000 event ids. Production deployments must use a
+production server or ingress with read deadlines and durable deduplication
+storage with an explicit retention policy.
 
 The `client.webhooks.verify` and `client.webhooks.unwrap` methods implement the
 legacy signed-payload contract from SDK `0.2`. They remain available for source
@@ -231,7 +238,9 @@ public issue. Follow [SECURITY.md](./SECURITY.md) for private reporting.
 
 ## License
 
-This project is licensed under the [MIT License](./LICENSE).
+This project is licensed under the [MIT License](./LICENSE). The same license
+applies to the published PyPI distributions `calle-ai==0.6.0` and
+`calle-ai==0.7.0`.
 
 ## Project Documents
 

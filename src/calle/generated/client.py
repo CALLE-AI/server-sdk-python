@@ -35,9 +35,9 @@ class Client:
     """
 
     raise_on_unexpected_status: bool = field(default=False, kw_only=True)
-    _base_url: str = field(alias="base_url")
-    _cookies: dict[str, str] = field(factory=dict, kw_only=True, alias="cookies")
-    _headers: dict[str, str] = field(factory=dict, kw_only=True, alias="headers")
+    _base_url: str = field(alias="base_url", repr=False)
+    _cookies: dict[str, str] = field(factory=dict, kw_only=True, alias="cookies", repr=False)
+    _headers: dict[str, str] = field(factory=dict, kw_only=True, alias="headers", repr=False)
     _timeout: httpx.Timeout | None = field(default=None, kw_only=True, alias="timeout")
     _verify_ssl: str | bool | ssl.SSLContext = field(
         default=True, kw_only=True, alias="verify_ssl"
@@ -45,9 +45,9 @@ class Client:
     _follow_redirects: bool = field(
         default=False, kw_only=True, alias="follow_redirects"
     )
-    _httpx_args: dict[str, Any] = field(factory=dict, kw_only=True, alias="httpx_args")
-    _client: httpx.Client | None = field(default=None, init=False)
-    _async_client: httpx.AsyncClient | None = field(default=None, init=False)
+    _httpx_args: dict[str, Any] = field(factory=dict, kw_only=True, alias="httpx_args", repr=False)
+    _client: httpx.Client | None = field(default=None, init=False, repr=False)
+    _async_client: httpx.AsyncClient | None = field(default=None, init=False, repr=False)
 
     def with_headers(self, headers: dict[str, str]) -> "Client":
         """Get a new client matching this one with additional headers"""
@@ -169,9 +169,9 @@ class AuthenticatedClient:
     """
 
     raise_on_unexpected_status: bool = field(default=False, kw_only=True)
-    _base_url: str = field(alias="base_url")
-    _cookies: dict[str, str] = field(factory=dict, kw_only=True, alias="cookies")
-    _headers: dict[str, str] = field(factory=dict, kw_only=True, alias="headers")
+    _base_url: str = field(alias="base_url", repr=False)
+    _cookies: dict[str, str] = field(factory=dict, kw_only=True, alias="cookies", repr=False)
+    _headers: dict[str, str] = field(factory=dict, kw_only=True, alias="headers", repr=False)
     _timeout: httpx.Timeout | None = field(default=None, kw_only=True, alias="timeout")
     _verify_ssl: str | bool | ssl.SSLContext = field(
         default=True, kw_only=True, alias="verify_ssl"
@@ -179,11 +179,11 @@ class AuthenticatedClient:
     _follow_redirects: bool = field(
         default=False, kw_only=True, alias="follow_redirects"
     )
-    _httpx_args: dict[str, Any] = field(factory=dict, kw_only=True, alias="httpx_args")
-    _client: httpx.Client | None = field(default=None, init=False)
-    _async_client: httpx.AsyncClient | None = field(default=None, init=False)
+    _httpx_args: dict[str, Any] = field(factory=dict, kw_only=True, alias="httpx_args", repr=False)
+    _client: httpx.Client | None = field(default=None, init=False, repr=False)
+    _async_client: httpx.AsyncClient | None = field(default=None, init=False, repr=False)
 
-    token: str
+    token: str = field(repr=False)
     prefix: str = "Bearer"
     auth_header_name: str = "Authorization"
 
