@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: CALL-E Developer API
-  version: 0.7.0
+  version: 0.7.1
   description: Developer API contract used by the CALL-E TypeScript and Python SDKs.
 servers:
   - url: https://api.heycall-e.com
