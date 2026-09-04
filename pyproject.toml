@@ -27,7 +27,7 @@ Repository = "https://github.com/CALLE-AI/server-sdk-python"
 "Bug Tracker" = "https://github.com/CALLE-AI/server-sdk-python/issues"
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling==1.32.0"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
@@ -35,12 +35,14 @@ packages = ["src/calle"]
 
 [dependency-groups]
 dev = [
+    "hatchling==1.32.0",
     "mypy>=1.19.0",
     "openapi-python-client>=0.29.0,<0.30.0",
     "pytest>=8.0.0",
     "pyyaml>=6.0.3",
     "respx>=0.22.0",
     "ruff>=0.14.0",
+    "twine==7.0.0",
 ]
 
 [tool.pytest.ini_options]

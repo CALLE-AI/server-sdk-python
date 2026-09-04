@@ -161,3 +161,24 @@ def test_wait_for_result_raises_timeout() -> None:
 
     with pytest.raises(CalleTimeoutError):
         client.calls.wait_for_result("call_123", interval_seconds=0.001, timeout_seconds=0.002)
+
+
+def test_call_id_stays_in_one_url_path_segment() -> None:
+    requests: list[httpx.Request] = []
+
+    def handle_request(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(200, json={})
+
+    call_id = "../goals?admin=1#fragment%2F"
+    with httpx.Client(
+        base_url="https://api.heycall-e.com",
+        transport=httpx.MockTransport(handle_request),
+    ) as http_client:
+        client = CalleClient(api_key="key_test", http_client=http_client)
+        client.calls.get(call_id)
+        client.calls.list_events(call_id)
+
+    encoded_id = "%2E%2E%2Fgoals%3Fadmin%3D1%23fragment%252F"
+    assert requests[0].url.raw_path == f"/v1/calls/{encoded_id}".encode()
+    assert requests[1].url.raw_path == f"/v1/calls/{encoded_id}/events".encode()

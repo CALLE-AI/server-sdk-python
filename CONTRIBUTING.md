@@ -21,7 +21,7 @@ export CALLE_BASE_URL="https://api.heycall-e.com"
 export CALLE_EXAMPLE_PHONE="+14155550100"
 uv run python examples/create_and_wait.py
 
-export CALLE_BASE_URL="https://test-api.heycall-e.com"
+export CALLE_BASE_URL="<APPROVED_TEST_API_BASE_URL>"
 export CALLE_GOAL_ID="<PUBLISHED_GOAL_ID>"
 export CALLE_GOAL_PHONE="<AUTHORIZED_E164_PHONE>"
 export CALLE_GOAL_VARIABLES='{"name":"Alex"}'
