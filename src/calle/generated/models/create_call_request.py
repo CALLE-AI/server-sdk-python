@@ -30,7 +30,9 @@ class CreateCallRequest:
         task (str): Natural-language instruction for the call task. Include the goal, relevant details the voice agent
             should know, and the exact information you want collected.
         recipients (list[CallTaskRecipientRequest] | None | Unset): Optional explicit recipients for this call task.
-            Omit it when the task text already contains the phone targets CALL-E should use.
+            Omit it when the task text already contains the phone targets CALL-E should use. The default outbound line
+            permits one phone number in total across all recipients. Multiple targets require an eligible purchased outbound
+            number; this also applies to targets inferred from task text.
         result_schema (CreateCallRequestResultSchemaType0 | None | Unset): Optional JSON Schema object that defines the
             structured result CALL-E should extract for the whole call task.
 
