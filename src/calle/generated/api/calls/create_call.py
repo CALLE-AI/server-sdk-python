@@ -32,9 +32,7 @@ def _get_kwargs(
     return _kwargs
 
 
-def _parse_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> ErrorEnvelope | None:
+def _parse_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> ErrorEnvelope | None:
     if response.status_code == 400:
         response_400 = ErrorEnvelope.from_dict(response.json())
 
@@ -81,9 +79,7 @@ def _parse_response(
         return None
 
 
-def _build_response(
-    *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[ErrorEnvelope]:
+def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Response) -> Response[ErrorEnvelope]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -101,11 +97,12 @@ def sync_detailed(
     """Create Call
 
      Create an asynchronous call. Use `result_schema` and `recipient_result_schema` to ask CALL-E to
-    extract structured JSON results from terminal call evidence. The default outbound line supports one
-    phone number per task. Batch calls require an eligible purchased number selected as the account
-    default outbound number; otherwise creation returns `422 call_not_ready`. Each authenticated user
-    can create up to 20 call plans in any rolling 24-hour period; additional requests return `429
-    rate_limit_exceeded` before planning begins.
+    extract structured JSON results from terminal call evidence. Shared platform outbound lines support
+    one phone number per task. Batch calls require an eligible purchased number selected as the account
+    default outbound number; otherwise creation returns `422 call_not_ready`. Account concurrency and
+    LLM token usage are controlled by the effective account configuration. Task concurrency defaults to
+    1 on shared platform lines and 10 on eligible dedicated purchased numbers; selecting a purchased
+    number as the account default does not make it a shared platform line.
 
     Args:
         idempotency_key (str | Unset):
@@ -140,11 +137,12 @@ def sync(
     """Create Call
 
      Create an asynchronous call. Use `result_schema` and `recipient_result_schema` to ask CALL-E to
-    extract structured JSON results from terminal call evidence. The default outbound line supports one
-    phone number per task. Batch calls require an eligible purchased number selected as the account
-    default outbound number; otherwise creation returns `422 call_not_ready`. Each authenticated user
-    can create up to 20 call plans in any rolling 24-hour period; additional requests return `429
-    rate_limit_exceeded` before planning begins.
+    extract structured JSON results from terminal call evidence. Shared platform outbound lines support
+    one phone number per task. Batch calls require an eligible purchased number selected as the account
+    default outbound number; otherwise creation returns `422 call_not_ready`. Account concurrency and
+    LLM token usage are controlled by the effective account configuration. Task concurrency defaults to
+    1 on shared platform lines and 10 on eligible dedicated purchased numbers; selecting a purchased
+    number as the account default does not make it a shared platform line.
 
     Args:
         idempotency_key (str | Unset):
@@ -174,11 +172,12 @@ async def asyncio_detailed(
     """Create Call
 
      Create an asynchronous call. Use `result_schema` and `recipient_result_schema` to ask CALL-E to
-    extract structured JSON results from terminal call evidence. The default outbound line supports one
-    phone number per task. Batch calls require an eligible purchased number selected as the account
-    default outbound number; otherwise creation returns `422 call_not_ready`. Each authenticated user
-    can create up to 20 call plans in any rolling 24-hour period; additional requests return `429
-    rate_limit_exceeded` before planning begins.
+    extract structured JSON results from terminal call evidence. Shared platform outbound lines support
+    one phone number per task. Batch calls require an eligible purchased number selected as the account
+    default outbound number; otherwise creation returns `422 call_not_ready`. Account concurrency and
+    LLM token usage are controlled by the effective account configuration. Task concurrency defaults to
+    1 on shared platform lines and 10 on eligible dedicated purchased numbers; selecting a purchased
+    number as the account default does not make it a shared platform line.
 
     Args:
         idempotency_key (str | Unset):
@@ -211,11 +210,12 @@ async def asyncio(
     """Create Call
 
      Create an asynchronous call. Use `result_schema` and `recipient_result_schema` to ask CALL-E to
-    extract structured JSON results from terminal call evidence. The default outbound line supports one
-    phone number per task. Batch calls require an eligible purchased number selected as the account
-    default outbound number; otherwise creation returns `422 call_not_ready`. Each authenticated user
-    can create up to 20 call plans in any rolling 24-hour period; additional requests return `429
-    rate_limit_exceeded` before planning begins.
+    extract structured JSON results from terminal call evidence. Shared platform outbound lines support
+    one phone number per task. Batch calls require an eligible purchased number selected as the account
+    default outbound number; otherwise creation returns `422 call_not_ready`. Account concurrency and
+    LLM token usage are controlled by the effective account configuration. Task concurrency defaults to
+    1 on shared platform lines and 10 on eligible dedicated purchased numbers; selecting a purchased
+    number as the account default does not make it a shared platform line.
 
     Args:
         idempotency_key (str | Unset):
