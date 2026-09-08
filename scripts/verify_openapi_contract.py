@@ -49,7 +49,7 @@ def main() -> None:
         "unexpected title",
     )
     assert_contract(
-        spec.get("info", {}).get("version") == "0.7.0",
+        spec.get("info", {}).get("version") == "0.7.1",
         "unexpected API version",
     )
 
