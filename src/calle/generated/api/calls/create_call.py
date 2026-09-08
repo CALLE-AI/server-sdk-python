@@ -3,13 +3,11 @@ from typing import Any
 
 import httpx
 
-from ...client import AuthenticatedClient, Client
-from ...types import Response, UNSET
 from ... import errors
-
+from ...client import AuthenticatedClient, Client
 from ...models.create_call_request import CreateCallRequest
 from ...models.error_envelope import ErrorEnvelope
-from ...types import Unset
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
@@ -72,6 +70,11 @@ def _parse_response(
 
         return response_500
 
+    if response.status_code == 503:
+        response_503 = ErrorEnvelope.from_dict(response.json())
+
+        return response_503
+
     if client.raise_on_unexpected_status:
         raise errors.UnexpectedStatus(response.status_code, response.content)
     else:
@@ -98,7 +101,11 @@ def sync_detailed(
     """Create Call
 
      Create an asynchronous call. Use `result_schema` and `recipient_result_schema` to ask CALL-E to
-    extract structured JSON results from terminal call evidence.
+    extract structured JSON results from terminal call evidence. The default outbound line supports one
+    phone number per task. Batch calls require an eligible purchased number selected as the account
+    default outbound number; otherwise creation returns `422 call_not_ready`. Each authenticated user
+    can create up to 20 call plans in any rolling 24-hour period; additional requests return `429
+    rate_limit_exceeded` before planning begins.
 
     Args:
         idempotency_key (str | Unset):
@@ -133,7 +140,11 @@ def sync(
     """Create Call
 
      Create an asynchronous call. Use `result_schema` and `recipient_result_schema` to ask CALL-E to
-    extract structured JSON results from terminal call evidence.
+    extract structured JSON results from terminal call evidence. The default outbound line supports one
+    phone number per task. Batch calls require an eligible purchased number selected as the account
+    default outbound number; otherwise creation returns `422 call_not_ready`. Each authenticated user
+    can create up to 20 call plans in any rolling 24-hour period; additional requests return `429
+    rate_limit_exceeded` before planning begins.
 
     Args:
         idempotency_key (str | Unset):
@@ -163,7 +174,11 @@ async def asyncio_detailed(
     """Create Call
 
      Create an asynchronous call. Use `result_schema` and `recipient_result_schema` to ask CALL-E to
-    extract structured JSON results from terminal call evidence.
+    extract structured JSON results from terminal call evidence. The default outbound line supports one
+    phone number per task. Batch calls require an eligible purchased number selected as the account
+    default outbound number; otherwise creation returns `422 call_not_ready`. Each authenticated user
+    can create up to 20 call plans in any rolling 24-hour period; additional requests return `429
+    rate_limit_exceeded` before planning begins.
 
     Args:
         idempotency_key (str | Unset):
@@ -196,7 +211,11 @@ async def asyncio(
     """Create Call
 
      Create an asynchronous call. Use `result_schema` and `recipient_result_schema` to ask CALL-E to
-    extract structured JSON results from terminal call evidence.
+    extract structured JSON results from terminal call evidence. The default outbound line supports one
+    phone number per task. Batch calls require an eligible purchased number selected as the account
+    default outbound number; otherwise creation returns `422 call_not_ready`. Each authenticated user
+    can create up to 20 call plans in any rolling 24-hour period; additional requests return `429
+    rate_limit_exceeded` before planning begins.
 
     Args:
         idempotency_key (str | Unset):
