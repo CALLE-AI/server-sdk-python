@@ -15,8 +15,12 @@ fresh wheel and source-distribution installs.
 
 ## Local examples
 
+Replace the sample credentials with your own key before running. Read
+[API keys and diagnostic output](./README.md#api-keys-and-diagnostic-output)
+before sharing example output.
+
 ```bash
-export CALLE_API_KEY="calle_test_key"
+export CALLE_API_KEY="iams_live_example"
 export CALLE_BASE_URL="https://api.heycall-e.com"
 export CALLE_EXAMPLE_PHONE="+14155550100"
 uv run python examples/create_and_wait.py

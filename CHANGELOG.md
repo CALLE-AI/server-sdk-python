@@ -7,6 +7,10 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### Changed
+
+- Clarify placeholder API keys and redaction of credentials and private call data in SDK documentation.
+
 ## [0.7.1] - 2026-09-04
 
 ### Added
