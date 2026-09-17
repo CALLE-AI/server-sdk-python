@@ -1,9 +1,18 @@
 # calle-ai
 
+> This branch prepares **SDK 1.0.0 (unreleased)** for the Agentic `/v2/calls` API.
+> The published 0.7.0 SDK still uses `/v1/calls`. Use the local build for the
+> examples below; backend rollout and scheduled authorization are not complete.
+
 Python server SDK for the CALL-E Developer API.
 
 Use this SDK from backend services, workers, and other trusted server
 environments. Do not expose CALL-E API keys in browser code.
+
+One-shot v2 uses the same `result` / `error` contract as Goal Runs. A required
+closed scalar-object result schema defines the business fields. SDK wait helpers
+continue until either field is non-null, even after execution reaches `completed`.
+Empty `{}` is a ready result. Webhook data matches the persisted GET snapshot.
 
 ## Documentation
 
@@ -124,42 +133,52 @@ retries. `wait_for_result` returns when either `result` or `error` is non-null;
 an execution `status` of `completed` can still be waiting for result
 materialization.
 
-The generic one-shot call API remains available independently:
+## One-shot migration in 1.0 (unreleased)
+
+The `calls` wrapper now submits one explicit phone to `/v2/calls` and requires
+an idempotency key. Keep the key for retries. The backend continues serving
+existing v1 integrations; use SDK 0.7.x for historical v1 call ids.
 
 ```python
-import os
-from calle import CalleClient
-
-client = CalleClient(
-    api_key=os.environ["CALLE_API_KEY"],
-    base_url="https://api.heycall-e.com",
-)
-
 call = client.calls.create_and_wait(
-    task="Call each recipient and ask whether they can attend Friday lunch in San Francisco.",
-    recipients=[{"phones": ["+14155550100"], "region": "US", "locale": "en-US"}],
+    task="Ask whether Friday lunch is confirmed.",
+    phone="<AUTHORIZED_E164_PHONE>", region="US", locale="en-US",
     result_schema={
-        "type": "object",
-        "required": ["completed_count"],
-        "properties": {
-            "completed_count": {"type": "integer"},
-        },
+        "type": "object", "additionalProperties": False, "required": ["answer"],
+        "properties": {"answer": {"type": "string", "enum": ["yes", "no", "unknown"]}},
     },
-    recipient_result_schema={
-        "type": "object",
-        "required": ["can_attend"],
-        "properties": {
-            "can_attend": {"type": "string", "enum": ["yes", "no", "unknown"]},
-        },
-    },
-    metadata={"workflow_run_id": "wf_123"},
-    idempotency_key="wf_123_friday_lunch",
+    idempotency_key="lunch:friday:confirmation:v1",
 )
-
-print(call["status"], call["structured_result"])
-print(call["task_completed"], call["completion_confidence"], call["evidence"])
-print(call["recipients"][0]["structured_result"])
+if call["error"] is None:
+    print(call["result"])
+else:
+    print(call["error"])
+# Cancel a queued call before provider submission:
+# client.calls.cancel(call_id)
 ```
+
+Replace `recipient` / `recipients` with `phone`, `region`, and `locale`.
+Define the required `result_schema` (`resultSchema` in TypeScript) using Goal's
+`calle.result.scalar-object.v1` profile: at most 32 scalar properties and
+`additionalProperties: false`. Flatten old nested fields; arrays and null values
+are unsupported. Old `structured_result`, `result_status`, `result_error`, summary,
+confidence and conversation fields are removed. Request business summaries or
+completion flags explicitly as scalar fields in the schema when needed.
+Batch and recurring workflows belong to reusable Goals.
+
+The returned object is `call`. Consume `result` and `error` exactly as for Goal Runs.
+They are mutually exclusive; both null means keep polling, including after execution
+status becomes completed. Unknown required values produce result_unavailable;
+invalid results produce result_invalid; materialization/persistence failure produces
+result_failed. Execution failures also use error. GET reads committed state and
+terminal webhooks contain the same ready snapshot. Deduplicate by event id.
+
+Cancellation returns `409 call_cannot_cancel` after provider submission begins.
+`scheduled_at` / `scheduledAt` is reserved in this draft and currently returns
+`422 scheduling_unavailable`. Do not enable scheduled calls until renewable
+execution authorization is configured. If authorization expires after submission,
+`error.detail_code=authorization_expired` means the provider may still complete the call; do not
+create an automatic replacement call.
 
 ## Release
 

@@ -1,6 +1,9 @@
 from typing import Literal
 
 APIErrorCode = Literal[
+    "account_concurrency_exceeded",
+    "account_concurrency_unavailable",
+    "call_cannot_cancel",
     "call_not_ready",
     "forbidden",
     "goal_not_executable",
@@ -12,6 +15,8 @@ APIErrorCode = Literal[
     "invalid_phone",
     "invalid_recipient",
     "invalid_request",
+    "llm_token_budget_exceeded",
+    "llm_token_budget_unavailable",
     "no_recipients",
     "not_found",
     "policy_violation",
@@ -20,6 +25,7 @@ APIErrorCode = Literal[
     "recipient_blocked",
     "recipient_result_schema_invalid",
     "result_schema_invalid",
+    "scheduling_unavailable",
     "schema_override_not_allowed",
     "unauthorized",
     "unsupported_language",
@@ -28,6 +34,9 @@ APIErrorCode = Literal[
 ]
 
 API_ERROR_CODE_VALUES: set[APIErrorCode] = {
+    "account_concurrency_exceeded",
+    "account_concurrency_unavailable",
+    "call_cannot_cancel",
     "call_not_ready",
     "forbidden",
     "goal_not_executable",
@@ -39,6 +48,8 @@ API_ERROR_CODE_VALUES: set[APIErrorCode] = {
     "invalid_phone",
     "invalid_recipient",
     "invalid_request",
+    "llm_token_budget_exceeded",
+    "llm_token_budget_unavailable",
     "no_recipients",
     "not_found",
     "policy_violation",
@@ -47,6 +58,7 @@ API_ERROR_CODE_VALUES: set[APIErrorCode] = {
     "recipient_blocked",
     "recipient_result_schema_invalid",
     "result_schema_invalid",
+    "scheduling_unavailable",
     "schema_override_not_allowed",
     "unauthorized",
     "unsupported_language",

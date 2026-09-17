@@ -1,11 +1,18 @@
 """Contains all the data models used in inputs/outputs"""
 
+from .agentic_call import AgenticCall
+from .agentic_call_metadata import AgenticCallMetadata
+from .agentic_call_result_type_0 import AgenticCallResultType0
+from .agentic_webhook_event import AgenticWebhookEvent
+from .agentic_webhook_event_type import AgenticWebhookEventType
 from .api_error import APIError
 from .api_error_code import APIErrorCode
 from .api_error_details import APIErrorDetails
 from .attempt_status import AttemptStatus
 from .call_status import CallStatus
+from .call_task import CallTask
 from .call_task_attempt import CallTaskAttempt
+from .call_task_metadata import CallTaskMetadata
 from .call_task_object import CallTaskObject
 from .call_task_recipient import CallTaskRecipient
 from .call_task_recipient_request import CallTaskRecipientRequest
@@ -15,6 +22,11 @@ from .call_task_recipient_structured_result_type_0 import (
 from .call_task_structured_result_type_0 import CallTaskStructuredResultType0
 from .call_transcript_turn import CallTranscriptTurn
 from .completion_confidence import CompletionConfidence
+from .create_agentic_call_request import CreateAgenticCallRequest
+from .create_agentic_call_request_metadata import CreateAgenticCallRequestMetadata
+from .create_agentic_call_request_result_schema import (
+    CreateAgenticCallRequestResultSchema,
+)
 from .create_call_request import CreateCallRequest
 from .create_call_request_metadata import CreateCallRequestMetadata
 from .create_call_request_recipient_result_schema_type_0 import (
@@ -47,15 +59,29 @@ from .goal_variables import GoalVariables
 from .recipient_status import RecipientStatus
 from .transcript_speaker import TranscriptSpeaker
 from .webhook_acknowledgement import WebhookAcknowledgement
+from .webhook_call_data import WebhookCallData
+from .webhook_call_data_metadata import WebhookCallDataMetadata
+from .webhook_call_data_object import WebhookCallDataObject
+from .webhook_call_data_structured_result_type_0 import (
+    WebhookCallDataStructuredResultType0,
+)
+from .webhook_event import WebhookEvent
 from .webhook_event_type import WebhookEventType
 
 __all__ = (
+    "AgenticCall",
+    "AgenticCallMetadata",
+    "AgenticCallResultType0",
+    "AgenticWebhookEvent",
+    "AgenticWebhookEventType",
     "APIError",
     "APIErrorCode",
     "APIErrorDetails",
     "AttemptStatus",
     "CallStatus",
+    "CallTask",
     "CallTaskAttempt",
+    "CallTaskMetadata",
     "CallTaskObject",
     "CallTaskRecipient",
     "CallTaskRecipientRequest",
@@ -63,6 +89,9 @@ __all__ = (
     "CallTaskStructuredResultType0",
     "CallTranscriptTurn",
     "CompletionConfidence",
+    "CreateAgenticCallRequest",
+    "CreateAgenticCallRequestMetadata",
+    "CreateAgenticCallRequestResultSchema",
     "CreateCallRequest",
     "CreateCallRequestMetadata",
     "CreateCallRequestRecipientResultSchemaType0",
@@ -93,5 +122,10 @@ __all__ = (
     "RecipientStatus",
     "TranscriptSpeaker",
     "WebhookAcknowledgement",
+    "WebhookCallData",
+    "WebhookCallDataMetadata",
+    "WebhookCallDataObject",
+    "WebhookCallDataStructuredResultType0",
+    "WebhookEvent",
     "WebhookEventType",
 )

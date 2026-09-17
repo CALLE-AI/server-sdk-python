@@ -52,11 +52,8 @@ class WebhookHandler(BaseHTTPRequestHandler):
                 "Call completed",
                 {
                     "call_id": call_id,
-                    "result": call.get("structured_result"),
-                    "summary": call.get("summary"),
-                    "task_completed": call.get("task_completed"),
-                    "completion_confidence": call.get("completion_confidence"),
-                    "evidence": call.get("evidence"),
+                    "result": call.get("result"),
+                    "error": call.get("error"),
                 },
             )
         else:

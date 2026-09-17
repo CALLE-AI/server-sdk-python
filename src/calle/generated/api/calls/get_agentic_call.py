@@ -8,7 +8,7 @@ from ...client import AuthenticatedClient, Client
 from ...types import Response
 from ... import errors
 
-from ...models.call_task import CallTask
+from ...models.agentic_call import AgenticCall
 from ...models.error_envelope import ErrorEnvelope
 
 
@@ -18,7 +18,7 @@ def _get_kwargs(
 
     _kwargs: dict[str, Any] = {
         "method": "get",
-        "url": "/v1/calls/{call_id}".format(
+        "url": "/v2/calls/{call_id}".format(
             call_id=quote(str(call_id), safe=""),
         ),
     }
@@ -28,11 +28,16 @@ def _get_kwargs(
 
 def _parse_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> CallTask | ErrorEnvelope | None:
+) -> AgenticCall | ErrorEnvelope | None:
     if response.status_code == 200:
-        response_200 = CallTask.from_dict(response.json())
+        response_200 = AgenticCall.from_dict(response.json())
 
         return response_200
+
+    if response.status_code == 400:
+        response_400 = ErrorEnvelope.from_dict(response.json())
+
+        return response_400
 
     if response.status_code == 401:
         response_401 = ErrorEnvelope.from_dict(response.json())
@@ -49,10 +54,10 @@ def _parse_response(
 
         return response_404
 
-    if response.status_code == 429:
-        response_429 = ErrorEnvelope.from_dict(response.json())
+    if response.status_code == 409:
+        response_409 = ErrorEnvelope.from_dict(response.json())
 
-        return response_429
+        return response_409
 
     if response.status_code == 500:
         response_500 = ErrorEnvelope.from_dict(response.json())
@@ -67,7 +72,7 @@ def _parse_response(
 
 def _build_response(
     *, client: AuthenticatedClient | Client, response: httpx.Response
-) -> Response[CallTask | ErrorEnvelope]:
+) -> Response[AgenticCall | ErrorEnvelope]:
     return Response(
         status_code=HTTPStatus(response.status_code),
         content=response.content,
@@ -80,10 +85,10 @@ def sync_detailed(
     call_id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[CallTask | ErrorEnvelope]:
-    """Get Call
+) -> Response[AgenticCall | ErrorEnvelope]:
+    """Read a committed Agentic call result
 
-     Get a call by id.
+     Polling reads persisted state and never performs extraction or initiates a call.
 
     Args:
         call_id (str):
@@ -93,7 +98,7 @@ def sync_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CallTask | ErrorEnvelope]
+        Response[AgenticCall | ErrorEnvelope]
     """
 
     kwargs = _get_kwargs(
@@ -111,10 +116,10 @@ def sync(
     call_id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> CallTask | ErrorEnvelope | None:
-    """Get Call
+) -> AgenticCall | ErrorEnvelope | None:
+    """Read a committed Agentic call result
 
-     Get a call by id.
+     Polling reads persisted state and never performs extraction or initiates a call.
 
     Args:
         call_id (str):
@@ -124,7 +129,7 @@ def sync(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CallTask | ErrorEnvelope
+        AgenticCall | ErrorEnvelope
     """
 
     return sync_detailed(
@@ -137,10 +142,10 @@ async def asyncio_detailed(
     call_id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> Response[CallTask | ErrorEnvelope]:
-    """Get Call
+) -> Response[AgenticCall | ErrorEnvelope]:
+    """Read a committed Agentic call result
 
-     Get a call by id.
+     Polling reads persisted state and never performs extraction or initiates a call.
 
     Args:
         call_id (str):
@@ -150,7 +155,7 @@ async def asyncio_detailed(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        Response[CallTask | ErrorEnvelope]
+        Response[AgenticCall | ErrorEnvelope]
     """
 
     kwargs = _get_kwargs(
@@ -166,10 +171,10 @@ async def asyncio(
     call_id: str,
     *,
     client: AuthenticatedClient | Client,
-) -> CallTask | ErrorEnvelope | None:
-    """Get Call
+) -> AgenticCall | ErrorEnvelope | None:
+    """Read a committed Agentic call result
 
-     Get a call by id.
+     Polling reads persisted state and never performs extraction or initiates a call.
 
     Args:
         call_id (str):
@@ -179,7 +184,7 @@ async def asyncio(
         httpx.TimeoutException: If the request takes longer than Client.timeout.
 
     Returns:
-        CallTask | ErrorEnvelope
+        AgenticCall | ErrorEnvelope
     """
 
     return (

@@ -11,23 +11,12 @@ def main() -> None:
     )
 
     call = client.calls.create_and_wait(
-        task="Call each recipient and ask whether they can attend Friday lunch in San Francisco.",
-        recipients=[
-            {
-                "phones": [os.environ.get("CALLE_EXAMPLE_PHONE", "+14155550100")],
-                "region": "US",
-                "locale": "en-US",
-            }
-        ],
+        task="Call the recipient and ask whether they can attend Friday lunch in San Francisco.",
+        phone=os.environ.get("CALLE_EXAMPLE_PHONE", "+14155550100"),
+        region="US", locale="en-US",
         result_schema={
             "type": "object",
-            "required": ["completed_count"],
-            "properties": {
-                "completed_count": {"type": "integer"},
-            },
-        },
-        recipient_result_schema={
-            "type": "object",
+            "additionalProperties": False,
             "required": ["can_attend"],
             "properties": {
                 "can_attend": {"type": "string", "enum": ["yes", "no", "unknown"]},

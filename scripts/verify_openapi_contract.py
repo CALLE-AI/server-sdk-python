@@ -49,7 +49,7 @@ def main() -> None:
         "unexpected title",
     )
     assert_contract(
-        spec.get("info", {}).get("version") == "0.7.0",
+        spec.get("info", {}).get("version") == "1.0.0",
         "unexpected API version",
     )
 
@@ -123,7 +123,7 @@ def main() -> None:
             "path": "/calle/webhook",
             "method": "post",
             "operation_id": "receiveWebhookEvent",
-            "request_schema": "#/components/schemas/WebhookEvent",
+            "request_schema": "#/components/schemas/TerminalWebhookEvent",
             "response_schema": "#/components/schemas/WebhookAcknowledgement",
             "error_statuses": [],
         },
@@ -155,7 +155,8 @@ def main() -> None:
         for status in operation["error_statuses"]:
             assert_contract(
                 endpoint.get("responses", {}).get(status, {}).get("$ref")
-                == "#/components/responses/ErrorResponse",
+                == "#/components/responses/ErrorResponse"
+                or response_schema_ref(spec, path, method, status) == "#/components/schemas/ErrorEnvelope",
                 f"missing stable {status} error response for {label}",
             )
 
@@ -209,8 +210,8 @@ def main() -> None:
         assert_contract(schema_name in schemas, f"missing schema {schema_name}")
 
     assert_contract(
-        schemas["WebhookCallData"].get("allOf")
-        == [{"$ref": "#/components/schemas/CallTask"}],
+        schemas["WebhookCallData"].get("$ref")
+        == "#/components/schemas/CallTask",
         "webhook data must reuse the complete call task shape",
     )
     terminal_result_fields = {
