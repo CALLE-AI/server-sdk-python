@@ -44,7 +44,8 @@ or signature headers.
 
 In scope:
 
-- Create a call.
+- Create a call, including multiple recipients when the account has an eligible
+  purchased number selected as its default outbound number.
 - Read a call.
 - Poll until a terminal call result.
 - List call events.
@@ -57,7 +58,6 @@ In scope:
 Out of scope:
 
 - Async client support.
-- Batch calls.
 - Cancel calls.
 - Recurring or scheduled calls.
 - Goal authoring and publishing.
