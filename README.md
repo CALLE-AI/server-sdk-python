@@ -1,15 +1,16 @@
 # calle-ai
 
-> This branch prepares **SDK 1.0.0 (unreleased)** for the Agentic `/v2/calls` API.
-> The published 0.7.0 SDK still uses `/v1/calls`. Use the local build for the
-> examples below; backend rollout and scheduled authorization are not complete.
+[![PyPI version](https://img.shields.io/pypi/v/calle-ai)](https://pypi.org/project/calle-ai/)
+[![Python versions](https://img.shields.io/pypi/pyversions/calle-ai)](https://pypi.org/project/calle-ai/)
+[![CI](https://github.com/CALLE-AI/server-sdk-python/actions/workflows/ci.yml/badge.svg)](https://github.com/CALLE-AI/server-sdk-python/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 Python server SDK for the CALL-E Developer API.
 
 Use this SDK from backend services, workers, and other trusted server
 environments. Do not expose CALL-E API keys in browser code.
 
-One-shot v2 uses the same `result` / `error` contract as Goal Runs. A required
+SDK 1.0 uses the single-target Calls API and the same result model as Goal Runs. A required
 closed scalar-object result schema defines the business fields. SDK wait helpers
 continue while `result_status` is `pending`, even after execution reaches `completed`.
 Empty `{}` is a ready result. Webhook data matches the persisted GET snapshot.
@@ -20,21 +21,27 @@ Empty `{}` is a ready result. Webhook data matches the persisted GET snapshot.
 - SDK guide: <https://docs.heycall-e.com/#/sdks>
 - API Reference: <https://docs.heycall-e.com/#/api-reference>
 - Webhooks: <https://docs.heycall-e.com/#/webhooks>
-- Changelog: <https://docs.heycall-e.com/#/changelog>
+- Product changelog: <https://docs.heycall-e.com/#/changelog>
+- TypeScript SDK: <https://github.com/CALLE-AI/server-sdk-typescript>
+
+## SDK surface
+
+- `client.calls` creates, reads, and polls call tasks and lists call events.
+- `client.goals` lists and reads published Goals and runs them with structured
+  results.
+- `examples/webhook_server.py` shows how to receive current terminal webhook
+  events.
 
 ## Install
 
 Install the stable package from PyPI:
 
 ```bash
-pip install calle-ai
+pip install calle-ai==1.0.0
 ```
 
-Pin the current stable release when your deployment process requires exact package reproducibility:
-
-```bash
-pip install calle-ai==0.7.0
-```
+For reproducible deployments, pin the package version selected by your
+dependency-management workflow.
 
 Use a local checkout for development and package smoke tests:
 
@@ -42,12 +49,68 @@ Use a local checkout for development and package smoke tests:
 bash scripts/validate.sh
 ```
 
+Python 3.11 or newer is required.
+
+## Configuration
+
+Create one `CalleClient` and close it when your process no longer needs it:
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `api_key` | Yes | CALL-E API key. Load it from a server-side secret store or environment variable. |
+| `base_url` | No | API base URL. Defaults to `https://api.heycall-e.com`. |
+| `timeout` | No | HTTP request timeout in seconds. Defaults to `30.0`. |
+| `http_client` | No | Configured `httpx.Client` used as-is. It must define the required base URL, authentication, transport, and timeout. |
+
+With the default HTTP client, use `CalleClient` as a context manager so the SDK
+closes its connection pool:
+
+```python
+import os
+from calle import CalleClient
+
+with CalleClient(api_key=os.environ["CALLE_API_KEY"]) as client:
+    call = client.calls.get("call_123")
+```
+
+## API keys and diagnostic output
+
+Use the complete API key issued by the [CALL-E dashboard](https://dashboard.heycall-e.com/account/api-keys).
+`<YOUR_CALLE_API_KEY>` and the fallback keys in example scripts are non-working
+placeholders. Replace them with your own key; do not derive key validation or
+redaction patterns from a sample prefix.
+
+Before logging or sharing diagnostics:
+
+- Prefer a small set of fields such as SDK version, HTTP status, and error
+  code over dumping a full request, response, or error object.
+- Remove the entire `Authorization` header and configured secret values.
+  Matching one key prefix is not sufficient.
+- Review phone fields and free text, including `task`, transcripts, summaries,
+  evidence, custom results, metadata, and error details. The SDK preserves the
+  returned task text, which may contain a phone number or other private data.
+  Dashboard masking does not redact SDK output or raw API responses.
+
+For example, a manually redacted response excerpt for sharing can omit all
+other fields and replace both the task and recipient phone:
+
+```json
+{
+  "status": "completed",
+  "task": "[REDACTED]",
+  "recipients": [{"phones": ["[REDACTED]"]}]
+}
+```
+
+This is a diagnostic excerpt, not a create request. Inspect the final text
+before publishing it; these replacements are not a general-purpose PII filter.
+
 ## Examples
 
 Set the API key before running call examples:
 
 ```bash
-export CALLE_API_KEY="calle_test_key"
+export CALLE_API_KEY="<YOUR_CALLE_API_KEY>"
 export CALLE_BASE_URL="https://api.heycall-e.com"
 export CALLE_EXAMPLE_PHONE="+14155550100"
 ```
@@ -69,10 +132,10 @@ export CALLE_IDEMPOTENCY_KEY="<DURABLE_WORKFLOW_KEY>"
 uv run python examples/run_goal_and_wait.py
 ```
 
-To test against the test environment, explicitly set:
+To use an approved non-production environment, explicitly set:
 
 ```bash
-export CALLE_BASE_URL="https://test-api.heycall-e.com"
+export CALLE_BASE_URL="<APPROVED_TEST_API_BASE_URL>"
 ```
 
 Run the webhook receiver example:
@@ -89,6 +152,13 @@ CALL-E webhook delivery does not use a webhook secret, `CALL-E-Timestamp`, or
 `CALL-E-Signature`. Use the required `CALL-E-Event-Id` header to deduplicate
 at-least-once deliveries before performing side effects. The receiver example
 parses JSON directly and checks that this header matches the body event id.
+It defaults to a 10 MiB request-body limit and returns `413` for larger
+payloads. Set `CALLE_WEBHOOK_MAX_BODY_BYTES` to match your ingress limits.
+
+The bounded in-memory deduplication cache is only for local example use and
+retains the latest 10,000 event ids. Production deployments must use a
+production server or ingress with read deadlines and durable deduplication
+storage with an explicit retention policy.
 
 The `client.webhooks.verify` and `client.webhooks.unwrap` methods implement the
 legacy signed-payload contract from SDK `0.2`. They remain available for source
@@ -133,11 +203,13 @@ retries. `wait_for_result` returns when `result_status` is no longer `pending`;
 an execution `status` of `completed` can still be waiting for result
 materialization.
 
-## One-shot migration in 1.0 (unreleased)
+## Migration to SDK 1.0
 
 The `calls` wrapper now submits one explicit phone to `/v2/calls` and requires
 an idempotency key. Keep the key for retries. The backend continues serving
-existing v1 integrations; use SDK 0.7.x for historical v1 call ids.
+legacy integrations until their planned retirement at the end of 2026; keep
+SDK 0.7.x for historical legacy call IDs. Upgrade Goal Run integrations to 1.0
+as well: old wait helpers can time out when both `result` and `error` are null.
 
 ```python
 call = client.calls.create_and_wait(
@@ -157,14 +229,14 @@ else:
 # client.calls.cancel(call_id)
 ```
 
-Replace `recipient` / `recipients` with `phone`, `region`, and `locale`.
+Replace `recipient` / `recipients` with `phone` and optional `region` and `locale`.
 Define the required `result_schema` (`resultSchema` in TypeScript) using Goal's
 `calle.result.scalar-object.v1` profile: at most 32 scalar properties and
 `additionalProperties: false`. Flatten old nested fields; arrays and null values
 are unsupported. Old `structured_result`, `result_error`, summary,
 confidence and provider attempt fields are removed. Request business summaries or
 completion flags explicitly as scalar fields in the schema when needed.
-Batch and recurring workflows belong to reusable Goals.
+The Calls API does not support batch, scheduled or recurring calls.
 
 Calls and Goal Runs always expose `transcript`, an array of recorded turns with
 `speaker` (`bot`, `user`, `unknown`), nullable `offset_seconds`, and `text`.
@@ -185,37 +257,48 @@ Calls accept immediate execution only. If authorization expires after submission
 `error.detail_code=authorization_expired` means the provider may still complete the call; do not
 create an automatic replacement call.
 
+## Error handling
+
+The SDK exports errors for API responses, authentication, rate limits,
+timeouts, and connection failures:
+
+```python
+import os
+from calle import CalleAPIError, CalleClient
+
+with CalleClient(api_key=os.environ["CALLE_API_KEY"]) as client:
+    try:
+        client.calls.get("call_123")
+    except CalleAPIError as error:
+        print(error.status_code, error.code, error.details)
+        raise
+```
+
 ## Release
 
 This repository publishes the Python distribution `calle-ai`. Application code
 imports it as `calle`.
 
-See [RELEASE.md](./RELEASE.md) for the release checklist, GitHub Actions
-workflow, and post-publish install smoke test.
+Merging to `main` runs CI and does not publish the package. A stable publish is
+triggered only by publishing a GitHub Release with a matching `vX.Y.Z` tag;
+manually running the workflow performs a dry run. See [RELEASE.md](./RELEASE.md)
+for release gates and registry checks.
 
-Prerequisites:
+## Support and security
 
-- Create a PyPI API token and add it to this repository as the GitHub Actions secret `PYPI_API_TOKEN`.
-- Keep the package version in `pyproject.toml` unique before each publish.
+Use [GitHub Issues](https://github.com/CALLE-AI/server-sdk-python/issues) for
+reproducible SDK bugs and feature requests. Do not report vulnerabilities in a
+public issue. Follow [SECURITY.md](./SECURITY.md) for private reporting.
 
-Manual stable PyPI publish:
+## License
 
-1. Open the `Publish Python package` GitHub Actions workflow.
-2. Run it from `main` with repository `pypi` and auth `token`.
-3. Verify install in a temporary environment:
-
-```bash
-python -m venv .venv
-. .venv/bin/activate
-pip install calle-ai==0.7.0
-python -c 'from calle import CalleClient; c = CalleClient(api_key="smoke"); assert callable(c.goals.run_and_wait); c.close()'
-```
-
-The current stable version is `0.7.0`. Do not reuse a previously published
-PyPI version.
+This project is licensed under the [MIT License](./LICENSE). The same license
+applies to the published PyPI distributions `calle-ai==0.6.0` and
+`calle-ai==0.7.0`.
 
 ## Project Documents
 
 - [CONTRIBUTING.md](./CONTRIBUTING.md)
+- [CHANGELOG.md](./CHANGELOG.md)
 - [SECURITY.md](./SECURITY.md)
 - [RELEASE.md](./RELEASE.md)

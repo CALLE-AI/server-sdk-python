@@ -9,15 +9,23 @@ trusted backend services, workers, and automation systems.
 bash scripts/validate.sh
 ```
 
+This command verifies the OpenAPI contract, tests, lint, types, examples,
+public-repository hygiene, distribution metadata, packaged license files, and
+fresh wheel and source-distribution installs.
+
 ## Local examples
 
+Replace the sample credentials with your own key before running. Read
+[API keys and diagnostic output](./README.md#api-keys-and-diagnostic-output)
+before sharing example output.
+
 ```bash
-export CALLE_API_KEY="calle_test_key"
+export CALLE_API_KEY="<YOUR_CALLE_API_KEY>"
 export CALLE_BASE_URL="https://api.heycall-e.com"
 export CALLE_EXAMPLE_PHONE="+14155550100"
 uv run python examples/create_and_wait.py
 
-export CALLE_BASE_URL="https://test-api.heycall-e.com"
+export CALLE_BASE_URL="<APPROVED_TEST_API_BASE_URL>"
 export CALLE_GOAL_ID="<PUBLISHED_GOAL_ID>"
 export CALLE_GOAL_PHONE="<AUTHORIZED_E164_PHONE>"
 export CALLE_GOAL_VARIABLES='{"name":"Alex"}'
@@ -36,21 +44,20 @@ or signature headers.
 
 In scope:
 
-- Create a call.
+- Create a call, including multiple recipients when the account has an eligible
+  purchased number selected as its default outbound number.
 - Read a call.
 - Poll until a terminal call result.
 - List call events.
 - List and read published Goals.
 - Create a Goal Run with a durable idempotency key.
-- Poll until a Goal Run has either a result or an error.
+- Poll until a Goal Run's `result_status` is no longer `pending`.
 - Receive finalized terminal webhook events without requiring signature
   material.
 
 Out of scope:
 
 - Async client support.
-- Batch calls.
-- Cancel calls.
 - Recurring or scheduled calls.
 - Goal authoring and publishing.
 - Project-level webhook management.
@@ -84,3 +91,22 @@ handling, webhook event handling, and any changed API contract surface.
 
 Do not add browser examples or patterns that expose CALL-E API keys to client
 code.
+
+Update [CHANGELOG.md](./CHANGELOG.md) when a change affects package users. Pull
+request titles, descriptions, tracked paths, and tracked text must not contain
+private collaboration links, unencrypted IP URLs, or references to unconfirmed
+public repositories in the CALL-E GitHub organization.
+
+Run the standalone hygiene check with:
+
+```bash
+python3 scripts/check_public_repo_hygiene.py
+```
+
+The allowlist in that script contains only repositories confirmed for public
+use. Add a repository only after confirming that it is public.
+
+## License
+
+By submitting a contribution, you agree that it may be distributed under the
+[MIT License](./LICENSE).

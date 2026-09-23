@@ -194,3 +194,24 @@ def test_wait_accepts_empty_result() -> None:
     respx.get("https://api.heycall-e.com/v2/calls/call_123").mock(return_value=httpx.Response(200, json={**COMPLETED_CALL, "result_status": "available", "result": {}}))
     with CalleClient(api_key="test") as client:
         assert client.calls.wait_for_result("call_123", interval_seconds=0.001, timeout_seconds=0.5)["result"] == {}
+
+
+def test_call_id_stays_in_one_url_path_segment() -> None:
+    requests: list[httpx.Request] = []
+
+    def handle_request(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        return httpx.Response(200, json={})
+
+    call_id = "../goals?admin=1#fragment%2F"
+    with httpx.Client(
+        base_url="https://api.heycall-e.com",
+        transport=httpx.MockTransport(handle_request),
+    ) as http_client:
+        client = CalleClient(api_key="key_test", http_client=http_client)
+        client.calls.get(call_id)
+        client.calls.list_events(call_id)
+
+    encoded_id = "%2E%2E%2Fgoals%3Fadmin%3D1%23fragment%252F"
+    assert requests[0].url.raw_path == f"/v2/calls/{encoded_id}".encode()
+    assert requests[1].url.raw_path == f"/v2/calls/{encoded_id}/events".encode()

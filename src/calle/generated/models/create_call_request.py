@@ -67,7 +67,7 @@ class CreateCallRequest:
         metadata (CreateCallRequestMetadata | Unset): Optional caller-owned metadata echoed on the call and webhook
             payloads. Use this for workflow ids, tenant ids, or internal correlation keys.
         webhook_url (str | Unset): Optional per-request HTTPS webhook URL. When provided, CALL-E sends terminal call
-            events to this URL in addition to project-level webhook delivery.
+            events to this URL after result finalization.
     """
 
     task: str

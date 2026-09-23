@@ -1,6 +1,6 @@
 import time
-from urllib.parse import quote
 from typing import Any
+from urllib.parse import quote
 
 import httpx
 
@@ -38,14 +38,14 @@ class CalleCalls:
         return self._request("POST", "/v2/calls", json=payload, headers=headers)
 
     def get(self, call_id: str) -> JsonObject:
-        return self._request("GET", f"/v2/calls/{quote(call_id, safe='')}")
+        return self._request("GET", _call_path(call_id))
 
     def cancel(self, call_id: str) -> JsonObject:
-        return self._request("POST", f"/v2/calls/{quote(call_id, safe='')}/cancel")
+        return self._request("POST", f"{_call_path(call_id)}/cancel")
 
     def list_events(self, call_id: str, *, cursor: str | None = None, limit: int | None = None) -> JsonObject:
         params = {key: value for key, value in {"cursor": cursor, "limit": limit}.items() if value is not None}
-        return self._request("GET", f"/v2/calls/{quote(call_id, safe='')}/events", params=params)
+        return self._request("GET", f"{_call_path(call_id)}/events", params=params)
 
     def wait_for_result(
         self,
@@ -86,3 +86,8 @@ class CalleCalls:
         if not isinstance(payload, dict):
             raise CalleConnectionError("CALL-E API returned a non-object JSON response.")
         return payload
+
+
+def _call_path(call_id: str) -> str:
+    encoded_call_id = quote(call_id, safe="").replace(".", "%2E")
+    return f"/v2/calls/{encoded_call_id}"
