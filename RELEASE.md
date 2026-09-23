@@ -13,9 +13,15 @@ with these values:
 - Workflow: `publish-python.yml`
 - Environment: `pypi`
 
-Configure the GitHub `pypi` environment with required reviewers, prevent
-self-review, and restrict it to protected release tags. The workflow does not
-use a long-lived PyPI token.
+The GitHub `pypi` environment has no required reviewers and allows `main` and
+`v*` release tags. Publication starts automatically after the release checks
+pass. The workflow does not use a long-lived PyPI token.
+
+Register these exact values under the existing `calle-ai` project's Publishing
+settings on PyPI, not only in GitHub. An `invalid-publisher` response means
+PyPI has no publisher matching the repository, workflow and environment claims.
+Confirm the project and binding, then retry the failed publish job only after
+checking that the candidate version is still absent from PyPI.
 
 ## Prepare a release
 
@@ -40,9 +46,8 @@ files, and fresh wheel and source-distribution installs.
 
 1. Create a `vX.Y.Z` tag on the intended commit from `main`.
 2. Publish a non-prerelease GitHub Release for that tag.
-3. Approve the `pypi` environment deployment after checking the tag, version,
-   commit, changelog, and build result.
-4. Confirm that the publish and post-publish verification jobs complete.
+3. Confirm that the publish and post-publish verification jobs complete;
+   no separate environment approval is required.
 
 The workflow rejects a tag that does not exactly match `vX.Y.Z`, differs from
 the version in `pyproject.toml`, or points to a commit not contained in
