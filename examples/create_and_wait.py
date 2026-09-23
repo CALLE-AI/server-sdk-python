@@ -15,8 +15,6 @@ def main() -> None:
         recipients=[
             {
                 "phones": [os.environ.get("CALLE_EXAMPLE_PHONE", "+14155550100")],
-                "region": "US",
-                "locale": "en-US",
             }
         ],
         result_schema={
