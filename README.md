@@ -37,7 +37,7 @@ Empty `{}` is a ready result. Webhook data matches the persisted GET snapshot.
 Install the stable package from PyPI:
 
 ```bash
-pip install calle-ai==1.0.0
+pip install calle-ai==1.0.1
 ```
 
 For reproducible deployments, pin the package version selected by your

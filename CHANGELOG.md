@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2026-09-23
+
+### Fixed
+
+- Publish using the existing PyPI environment API token while retaining release
+  source, version, checksum and package validation. SDK behavior is unchanged
+  from 1.0.0, whose GitHub release did not reach PyPI.
+
 ## [1.0.0] - 2026-09-23
 
 ### Changed

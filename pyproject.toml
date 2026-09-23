@@ -1,6 +1,6 @@
 [project]
 name = "calle-ai"
-version = "1.0.0"
+version = "1.0.1"
 description = "Python server SDK for the CALL-E Developer API."
 readme = "README.md"
 license = "MIT"

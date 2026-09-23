@@ -5,28 +5,23 @@ imports it as `calle`.
 
 ## Release infrastructure
 
-Production publishing uses PyPI Trusted Publishing. Configure the publisher
-with these values:
-
-- Owner: `CALLE-AI`
-- Repository: `server-sdk-python`
-- Workflow: `publish-python.yml`
-- Environment: `pypi`
+Production publishing uses the existing `PYPI_API_TOKEN` secret in the GitHub
+`pypi` environment. The token must remain valid and have permission to upload
+`calle-ai`; prefer a project-scoped token. Only the publish job references the
+secret, through the official PyPI action's `password` input. Never print or
+copy its value into source, logs, or pull requests.
 
 The GitHub `pypi` environment has no required reviewers and allows `main` and
 `v*` release tags. Publication starts automatically after the release checks
-pass. The workflow does not use a long-lived PyPI token.
-
-Register these exact values under the existing `calle-ai` project's Publishing
-settings on PyPI, not only in GitHub. An `invalid-publisher` response means
-PyPI has no publisher matching the repository, workflow and environment claims.
-Confirm the project and binding, then retry the failed publish job only after
-checking that the candidate version is still absent from PyPI.
+pass. This token-based workflow does not request an OIDC identity token or
+generate PyPI attestations, which require Trusted Publishing. Token expiry or
+revocation stops publication; there is no automatic authentication fallback.
 
 ## Prepare a release
 
 1. Set a new, previously unpublished stable version in `pyproject.toml` and
-   keep the OpenAPI and generated-client version metadata aligned.
+   update `uv.lock`. Change OpenAPI and generated-client metadata only when
+   the API contract changes; a packaging-only patch keeps the API version.
 2. Move the relevant entries from `Unreleased` in [CHANGELOG.md](./CHANGELOG.md)
    into a section for that version and date.
 3. Run the release gates:
@@ -58,8 +53,7 @@ failure, or any other response stops the release.
 The workflow builds and validates the wheel and source distribution once and
 uploads them with a SHA-256 manifest. The publish job downloads that artifact
 and rechecks its exact file set, checksums, package version, MIT metadata, and
-LICENSE before handing the same files to Trusted Publishing. Only the publish
-job receives `id-token: write`.
+LICENSE before handing the same files to the token-authenticated PyPI action.
 
 Publishing and merging are separate actions: a push or merge to `main` never
 publishes a package.
