@@ -1,24 +1,13 @@
 from typing import Literal
 
 GoalRunErrorCode = Literal[
-    "call_failed",
-    "canceled",
-    "declined",
-    "no_answer",
-    "result_failed",
-    "result_invalid",
-    "result_unavailable",
-    "timed_out",
+    "call_failed", "result_failed", "result_invalid", "timed_out"
 ]
 
 GOAL_RUN_ERROR_CODE_VALUES: set[GoalRunErrorCode] = {
     "call_failed",
-    "canceled",
-    "declined",
-    "no_answer",
     "result_failed",
     "result_invalid",
-    "result_unavailable",
     "timed_out",
 }
 

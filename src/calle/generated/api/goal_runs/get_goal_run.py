@@ -102,10 +102,9 @@ def sync_detailed(
     Goal pointer, dispatch work, or start result materialization. Use the `GoalRun.id` returned
     by create as `goal_run_id`; the nested telephone `run_id` is not valid in this path.
 
-    Poll until either `result` or `error` is non-null. A non-null `result` is the parsed object
-    validated against the published result schema. A non-null `error` means this Run will not
-    produce a result. `status: completed` with both fields null means result processing is still
-    in progress.
+    Poll while `result_status` is `pending`. A non-null `result` is the parsed object validated
+    against the published result schema. `unavailable` means evidence did not support a business
+    result; no-answer, busy and declined calls are ordinary `call_outcome` values, not errors.
 
     Args:
         goal_id (str):
@@ -145,10 +144,9 @@ def sync(
     Goal pointer, dispatch work, or start result materialization. Use the `GoalRun.id` returned
     by create as `goal_run_id`; the nested telephone `run_id` is not valid in this path.
 
-    Poll until either `result` or `error` is non-null. A non-null `result` is the parsed object
-    validated against the published result schema. A non-null `error` means this Run will not
-    produce a result. `status: completed` with both fields null means result processing is still
-    in progress.
+    Poll while `result_status` is `pending`. A non-null `result` is the parsed object validated
+    against the published result schema. `unavailable` means evidence did not support a business
+    result; no-answer, busy and declined calls are ordinary `call_outcome` values, not errors.
 
     Args:
         goal_id (str):
@@ -183,10 +181,9 @@ async def asyncio_detailed(
     Goal pointer, dispatch work, or start result materialization. Use the `GoalRun.id` returned
     by create as `goal_run_id`; the nested telephone `run_id` is not valid in this path.
 
-    Poll until either `result` or `error` is non-null. A non-null `result` is the parsed object
-    validated against the published result schema. A non-null `error` means this Run will not
-    produce a result. `status: completed` with both fields null means result processing is still
-    in progress.
+    Poll while `result_status` is `pending`. A non-null `result` is the parsed object validated
+    against the published result schema. `unavailable` means evidence did not support a business
+    result; no-answer, busy and declined calls are ordinary `call_outcome` values, not errors.
 
     Args:
         goal_id (str):
@@ -224,10 +221,9 @@ async def asyncio(
     Goal pointer, dispatch work, or start result materialization. Use the `GoalRun.id` returned
     by create as `goal_run_id`; the nested telephone `run_id` is not valid in this path.
 
-    Poll until either `result` or `error` is non-null. A non-null `result` is the parsed object
-    validated against the published result schema. A non-null `error` means this Run will not
-    produce a result. `status: completed` with both fields null means result processing is still
-    in progress.
+    Poll while `result_status` is `pending`. A non-null `result` is the parsed object validated
+    against the published result schema. `unavailable` means evidence did not support a business
+    result; no-answer, busy and declined calls are ordinary `call_outcome` values, not errors.
 
     Args:
         goal_id (str):

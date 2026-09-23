@@ -15,7 +15,10 @@ T = TypeVar("T", bound="AgenticCallResultType0")
 
 @_attrs_define
 class AgenticCallResultType0:
-    """Result validated against the submitted result_schema and durably persisted, or null while processing or on error."""
+    """Result validated against result_schema and durably persisted. Null while pending, unavailable, not applicable, or on
+    a technical error. Explicit schema-valid task fallbacks are preserved.
+
+    """
 
     additional_properties: dict[str, bool | float | str] = _attrs_field(
         init=False, factory=dict

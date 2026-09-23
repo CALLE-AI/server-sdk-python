@@ -26,9 +26,9 @@ class AgenticWebhookEvent:
             id (str):
             type_ (AgenticWebhookEventType):
             created_at (datetime.datetime):
-            data (AgenticCall): Persisted one-shot snapshot with the same result/error contract as Goal Run. Continue
-                polling while both are null, even when status is completed. An empty result object is ready. Execution
-                completion does not imply business success. Terminal webhooks are sent after result or error is ready.
+            data (AgenticCall): Persisted one-shot snapshot sharing execution, call_outcome and result_status with Goal Run.
+                Poll only while result_status is pending. Completed execution does not imply business success. Terminal webhooks
+                are sent when result_status is no longer pending, including unavailable results.
     """
 
     id: str

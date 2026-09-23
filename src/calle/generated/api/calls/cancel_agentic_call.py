@@ -86,7 +86,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[AgenticCall | ErrorEnvelope]:
-    """Cancel before provider submission
+    """Cancel Call
 
      Cancellation is idempotent for terminal calls. Once provider submission starts, returns 409
     call_cannot_cancel; it does not hang up an active call.
@@ -118,7 +118,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
 ) -> AgenticCall | ErrorEnvelope | None:
-    """Cancel before provider submission
+    """Cancel Call
 
      Cancellation is idempotent for terminal calls. Once provider submission starts, returns 409
     call_cannot_cancel; it does not hang up an active call.
@@ -145,7 +145,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[AgenticCall | ErrorEnvelope]:
-    """Cancel before provider submission
+    """Cancel Call
 
      Cancellation is idempotent for terminal calls. Once provider submission starts, returns 409
     call_cannot_cancel; it does not hang up an active call.
@@ -175,7 +175,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
 ) -> AgenticCall | ErrorEnvelope | None:
-    """Cancel before provider submission
+    """Cancel Call
 
      Cancellation is idempotent for terminal calls. Once provider submission starts, returns 409
     call_cannot_cancel; it does not hang up an active call.

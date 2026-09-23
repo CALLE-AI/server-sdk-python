@@ -101,10 +101,15 @@ def sync_detailed(
     cursor: str | Unset = UNSET,
     limit: int | Unset = 50,
 ) -> Response[ErrorEnvelope | EventList]:
-    """List call lifecycle events
+    """List Events
 
-     Accepted, submission-started and terminal events, ordered chronologically. Internal Agentic events
-    are not exposed. These stable lifecycle events can be polled with the returned cursor.
+     Poll durable call events with cursor and limit. Events include call.accepted, call.in_progress,
+    call.ringing, call.connected, call.asr, call.speech, call.interrupted, call.dtmf, call.ended,
+    call.result_ready, and call.completed/failed/canceled. Sentence details include full text, speaker,
+    turn and an optional occurred_at timestamp. Events are ordered by persistence, including late
+    arrivals; event IDs are stable and deduplicated. Follow next_cursor for additional available pages.
+    To poll for later events, retain the last returned event ID as cursor even when next_cursor is null.
+    Existing lifecycle cursors remain valid. Reads do not dial, infer or persist anything.
 
     Args:
         call_id (str):
@@ -139,10 +144,15 @@ def sync(
     cursor: str | Unset = UNSET,
     limit: int | Unset = 50,
 ) -> ErrorEnvelope | EventList | None:
-    """List call lifecycle events
+    """List Events
 
-     Accepted, submission-started and terminal events, ordered chronologically. Internal Agentic events
-    are not exposed. These stable lifecycle events can be polled with the returned cursor.
+     Poll durable call events with cursor and limit. Events include call.accepted, call.in_progress,
+    call.ringing, call.connected, call.asr, call.speech, call.interrupted, call.dtmf, call.ended,
+    call.result_ready, and call.completed/failed/canceled. Sentence details include full text, speaker,
+    turn and an optional occurred_at timestamp. Events are ordered by persistence, including late
+    arrivals; event IDs are stable and deduplicated. Follow next_cursor for additional available pages.
+    To poll for later events, retain the last returned event ID as cursor even when next_cursor is null.
+    Existing lifecycle cursors remain valid. Reads do not dial, infer or persist anything.
 
     Args:
         call_id (str):
@@ -172,10 +182,15 @@ async def asyncio_detailed(
     cursor: str | Unset = UNSET,
     limit: int | Unset = 50,
 ) -> Response[ErrorEnvelope | EventList]:
-    """List call lifecycle events
+    """List Events
 
-     Accepted, submission-started and terminal events, ordered chronologically. Internal Agentic events
-    are not exposed. These stable lifecycle events can be polled with the returned cursor.
+     Poll durable call events with cursor and limit. Events include call.accepted, call.in_progress,
+    call.ringing, call.connected, call.asr, call.speech, call.interrupted, call.dtmf, call.ended,
+    call.result_ready, and call.completed/failed/canceled. Sentence details include full text, speaker,
+    turn and an optional occurred_at timestamp. Events are ordered by persistence, including late
+    arrivals; event IDs are stable and deduplicated. Follow next_cursor for additional available pages.
+    To poll for later events, retain the last returned event ID as cursor even when next_cursor is null.
+    Existing lifecycle cursors remain valid. Reads do not dial, infer or persist anything.
 
     Args:
         call_id (str):
@@ -208,10 +223,15 @@ async def asyncio(
     cursor: str | Unset = UNSET,
     limit: int | Unset = 50,
 ) -> ErrorEnvelope | EventList | None:
-    """List call lifecycle events
+    """List Events
 
-     Accepted, submission-started and terminal events, ordered chronologically. Internal Agentic events
-    are not exposed. These stable lifecycle events can be polled with the returned cursor.
+     Poll durable call events with cursor and limit. Events include call.accepted, call.in_progress,
+    call.ringing, call.connected, call.asr, call.speech, call.interrupted, call.dtmf, call.ended,
+    call.result_ready, and call.completed/failed/canceled. Sentence details include full text, speaker,
+    turn and an optional occurred_at timestamp. Events are ordered by persistence, including late
+    arrivals; event IDs are stable and deduplicated. Follow next_cursor for additional available pages.
+    To poll for later events, retain the last returned event ID as cursor even when next_cursor is null.
+    Existing lifecycle cursors remain valid. Reads do not dial, infer or persist anything.
 
     Args:
         call_id (str):

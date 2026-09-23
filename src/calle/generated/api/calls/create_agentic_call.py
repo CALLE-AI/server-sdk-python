@@ -71,6 +71,11 @@ def _parse_response(
 
         return response_422
 
+    if response.status_code == 429:
+        response_429 = ErrorEnvelope.from_dict(response.json())
+
+        return response_429
+
     if response.status_code == 500:
         response_500 = ErrorEnvelope.from_dict(response.json())
 
@@ -104,17 +109,23 @@ def sync_detailed(
     body: CreateAgenticCallRequest,
     idempotency_key: str,
 ) -> Response[AgenticCall | ErrorEnvelope]:
-    """Create a single Agentic call
+    """Create Call
 
-     Accept one phone for durable Agentic execution. Batch recipients, recurrence and
-    recipient_result_schema are not accepted. The accepted request and result_schema are immutable. In
-    this draft scheduled_at is reserved and non-null values return 422 scheduling_unavailable until
-    renewable execution authorization is configured.
+     Prepare one phone task before accepting it for execution. Missing or conflicting essential facts
+    return 422 input_incomplete with details.missing_inputs; no Call is created. Preparation is bounded
+    to 25 seconds; preparation failure or timeout returns 503 provider_unavailable. Successful
+    preparation is saved and reused during background execution. Batch recipients, recurrence and
+    recipient_result_schema are not accepted. The accepted request and result_schema are immutable.
+    Calls accept immediate execution only. Region and locale are optional or null. Infer region from the
+    phone and spoken locale from task intent and supported regional languages; accepted responses return
+    the resolved values. Conflicting phone/region or an ambiguous language returns 422 input_incomplete
+    with details.missing_inputs. Explicit locale is preserved. Unsupported inferred targets return 422
+    unsupported_region or unsupported_language.
 
     Args:
         idempotency_key (str):
-        body (CreateAgenticCallRequest): One phone, explicit dialing locale and a required Goal-
-            compatible result schema.
+        body (CreateAgenticCallRequest): One phone, optional region and spoken locale, and a
+            required Goal-compatible result schema.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -142,17 +153,23 @@ def sync(
     body: CreateAgenticCallRequest,
     idempotency_key: str,
 ) -> AgenticCall | ErrorEnvelope | None:
-    """Create a single Agentic call
+    """Create Call
 
-     Accept one phone for durable Agentic execution. Batch recipients, recurrence and
-    recipient_result_schema are not accepted. The accepted request and result_schema are immutable. In
-    this draft scheduled_at is reserved and non-null values return 422 scheduling_unavailable until
-    renewable execution authorization is configured.
+     Prepare one phone task before accepting it for execution. Missing or conflicting essential facts
+    return 422 input_incomplete with details.missing_inputs; no Call is created. Preparation is bounded
+    to 25 seconds; preparation failure or timeout returns 503 provider_unavailable. Successful
+    preparation is saved and reused during background execution. Batch recipients, recurrence and
+    recipient_result_schema are not accepted. The accepted request and result_schema are immutable.
+    Calls accept immediate execution only. Region and locale are optional or null. Infer region from the
+    phone and spoken locale from task intent and supported regional languages; accepted responses return
+    the resolved values. Conflicting phone/region or an ambiguous language returns 422 input_incomplete
+    with details.missing_inputs. Explicit locale is preserved. Unsupported inferred targets return 422
+    unsupported_region or unsupported_language.
 
     Args:
         idempotency_key (str):
-        body (CreateAgenticCallRequest): One phone, explicit dialing locale and a required Goal-
-            compatible result schema.
+        body (CreateAgenticCallRequest): One phone, optional region and spoken locale, and a
+            required Goal-compatible result schema.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -175,17 +192,23 @@ async def asyncio_detailed(
     body: CreateAgenticCallRequest,
     idempotency_key: str,
 ) -> Response[AgenticCall | ErrorEnvelope]:
-    """Create a single Agentic call
+    """Create Call
 
-     Accept one phone for durable Agentic execution. Batch recipients, recurrence and
-    recipient_result_schema are not accepted. The accepted request and result_schema are immutable. In
-    this draft scheduled_at is reserved and non-null values return 422 scheduling_unavailable until
-    renewable execution authorization is configured.
+     Prepare one phone task before accepting it for execution. Missing or conflicting essential facts
+    return 422 input_incomplete with details.missing_inputs; no Call is created. Preparation is bounded
+    to 25 seconds; preparation failure or timeout returns 503 provider_unavailable. Successful
+    preparation is saved and reused during background execution. Batch recipients, recurrence and
+    recipient_result_schema are not accepted. The accepted request and result_schema are immutable.
+    Calls accept immediate execution only. Region and locale are optional or null. Infer region from the
+    phone and spoken locale from task intent and supported regional languages; accepted responses return
+    the resolved values. Conflicting phone/region or an ambiguous language returns 422 input_incomplete
+    with details.missing_inputs. Explicit locale is preserved. Unsupported inferred targets return 422
+    unsupported_region or unsupported_language.
 
     Args:
         idempotency_key (str):
-        body (CreateAgenticCallRequest): One phone, explicit dialing locale and a required Goal-
-            compatible result schema.
+        body (CreateAgenticCallRequest): One phone, optional region and spoken locale, and a
+            required Goal-compatible result schema.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -211,17 +234,23 @@ async def asyncio(
     body: CreateAgenticCallRequest,
     idempotency_key: str,
 ) -> AgenticCall | ErrorEnvelope | None:
-    """Create a single Agentic call
+    """Create Call
 
-     Accept one phone for durable Agentic execution. Batch recipients, recurrence and
-    recipient_result_schema are not accepted. The accepted request and result_schema are immutable. In
-    this draft scheduled_at is reserved and non-null values return 422 scheduling_unavailable until
-    renewable execution authorization is configured.
+     Prepare one phone task before accepting it for execution. Missing or conflicting essential facts
+    return 422 input_incomplete with details.missing_inputs; no Call is created. Preparation is bounded
+    to 25 seconds; preparation failure or timeout returns 503 provider_unavailable. Successful
+    preparation is saved and reused during background execution. Batch recipients, recurrence and
+    recipient_result_schema are not accepted. The accepted request and result_schema are immutable.
+    Calls accept immediate execution only. Region and locale are optional or null. Infer region from the
+    phone and spoken locale from task intent and supported regional languages; accepted responses return
+    the resolved values. Conflicting phone/region or an ambiguous language returns 422 input_incomplete
+    with details.missing_inputs. Explicit locale is preserved. Unsupported inferred targets return 422
+    unsupported_region or unsupported_language.
 
     Args:
         idempotency_key (str):
-        body (CreateAgenticCallRequest): One phone, explicit dialing locale and a required Goal-
-            compatible result schema.
+        body (CreateAgenticCallRequest): One phone, optional region and spoken locale, and a
+            required Goal-compatible result schema.
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

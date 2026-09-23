@@ -40,6 +40,8 @@ QUEUED_RUN = {
     "call_id": None,
     "run_spec": {"id": "rspec_delivery_v4", "version": 4},
     "status": "queued",
+    "call_outcome": None, "result_status": "pending",
+    "transcript": [],
     "result": None,
     "error": None,
     "created_at": "2026-07-22T10:00:00Z",
@@ -56,6 +58,35 @@ def test_generated_goal_models_parse_public_api_examples() -> None:
     assert run.id == "rgrp_delivery_8472"
     assert run.call_id is None
     assert run.run_spec.id == "rspec_delivery_v4"
+    assert run.transcript == []
+
+
+@respx.mock
+def test_goal_transcript_survives_result_processing_failure():
+    turns = [{"speaker": "user", "offset_seconds": 2, "text": "Goodbye."}]
+    body = {**QUEUED_RUN, "status": "completed", "result_status": "unavailable", "transcript": turns,
+            "completed_at": "2026-07-22T10:01:00Z",
+            "error": {"code": "result_failed", "message": "Result processing failed.", "detail_code": None}}
+    respx.get("https://api.heycall-e.com/v1/goals/goal_delivery/runs/rgrp_delivery_8472").mock(
+        return_value=httpx.Response(200, json=body),
+    )
+    with CalleClient(api_key="test") as client:
+        result = client.goals.wait_for_result("goal_delivery", "rgrp_delivery_8472", interval_seconds=0.001, timeout_seconds=0.1)
+    assert result["transcript"] == turns
+    assert GoalRun.from_dict(result).to_dict()["transcript"] == turns
+
+
+@pytest.mark.parametrize("outcome", ["no_answer", "busy", "declined"])
+@respx.mock
+def test_wait_finishes_with_unavailable_business_result_and_no_error(outcome):
+    body = {**QUEUED_RUN, "status": "completed", "call_outcome": outcome,
+            "result_status": "unavailable", "completed_at": "2026-07-22T10:01:00Z"}
+    route = respx.get("https://api.heycall-e.com/v1/goals/goal_delivery/runs/rgrp_delivery_8472").mock(
+        return_value=httpx.Response(200, json=body),
+    )
+    with CalleClient(api_key="test") as client:
+        assert client.goals.wait_for_result("goal_delivery", "rgrp_delivery_8472", interval_seconds=0.001, timeout_seconds=0.1) == body
+    assert route.call_count == 1
 
 
 @respx.mock
@@ -153,7 +184,7 @@ def test_wait_for_result_ignores_completed_status_until_result_exists() -> None:
     succeeded = {
         **materializing,
         "call_id": "calling_call_delivery_8472",
-        "result": {"delivery_outcome": "confirmed"},
+        "result_status": "available", "call_outcome": "completed", "result": {"delivery_outcome": "confirmed"},
     }
     route = respx.get("https://api.heycall-e.com/v1/goals/goal_delivery/runs/rgrp_delivery_8472").mock(
         side_effect=[
@@ -179,9 +210,9 @@ def test_wait_for_result_ignores_completed_status_until_result_exists() -> None:
 def test_wait_for_result_returns_domain_error_as_data() -> None:
     failed = {
         **QUEUED_RUN,
-        "status": "failed",
+        "status": "failed", "result_status": "not_applicable",
         "error": {
-            "code": "no_answer",
+            "code": "call_failed",
             "message": "No human answered the call.",
             "detail_code": "provider_no_answer",
         },
@@ -200,7 +231,7 @@ def test_wait_for_result_returns_domain_error_as_data() -> None:
     )
 
     assert run["error"] == {
-        "code": "no_answer",
+        "code": "call_failed",
         "message": "No human answered the call.",
         "detail_code": "provider_no_answer",
     }
@@ -217,7 +248,7 @@ def test_run_and_wait_polls_returned_goal_run_identity() -> None:
             json={
                 **QUEUED_RUN,
                 "status": "completed",
-                "result": {"delivery_outcome": "confirmed"},
+                "result_status": "available", "call_outcome": "completed", "result": {"delivery_outcome": "confirmed"},
                 "completed_at": "2026-07-22T10:01:00Z",
             },
         )
@@ -242,7 +273,7 @@ def test_run_and_wait_returns_terminal_idempotent_replay_without_polling() -> No
     succeeded = {
         **QUEUED_RUN,
         "status": "completed",
-        "result": {"delivery_outcome": "confirmed"},
+        "result_status": "available", "call_outcome": "completed", "result": {"delivery_outcome": "confirmed"},
         "completed_at": "2026-07-22T10:01:00Z",
     }
     create_route = respx.post("https://api.heycall-e.com/v1/goals/goal_delivery/runs").mock(

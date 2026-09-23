@@ -87,7 +87,7 @@ class CalleGoals:
                 goal_run_id,
                 timeout_seconds=remaining_seconds,
             )
-            if run.get("result") is not None or run.get("error") is not None:
+            if run["result_status"] != "pending":
                 return run
             remaining_seconds = deadline - time.monotonic()
             if remaining_seconds <= 0:
@@ -113,7 +113,7 @@ class CalleGoals:
             variables=variables,
             idempotency_key=idempotency_key,
         )
-        if run.get("result") is not None or run.get("error") is not None:
+        if run["result_status"] != "pending":
             return run
         return self.wait_for_result(
             goal_id,

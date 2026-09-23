@@ -16,7 +16,7 @@ T = TypeVar("T", bound="GoalRunError")
 
 @_attrs_define
 class GoalRunError:
-    """Unified safe error returned when a Goal Run cannot produce a usable result.
+    """Technical execution or result-processing error. Ordinary call outcomes are not errors.
 
     Attributes:
         code (GoalRunErrorCode):

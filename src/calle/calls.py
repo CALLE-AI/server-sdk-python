@@ -19,11 +19,10 @@ class CalleCalls:
         *,
         task: str,
         phone: str,
-        region: str,
-        locale: str,
+        region: str | None = None,
+        locale: str | None = None,
         idempotency_key: str,
         result_schema: JsonObject,
-        scheduled_at: str | None = None,
         metadata: JsonObject | None = None,
         webhook_url: str | None = None,
     ) -> JsonObject:
@@ -31,7 +30,7 @@ class CalleCalls:
             raise ValueError("A stable idempotency_key is required.")
         body = {
             "task": task, "phone": phone, "region": region, "locale": locale,
-            "result_schema": result_schema, "scheduled_at": scheduled_at,
+            "result_schema": result_schema,
             "metadata": metadata, "webhook_url": webhook_url,
         }
         payload = {key: value for key, value in body.items() if value is not None}
@@ -58,7 +57,7 @@ class CalleCalls:
         deadline = time.monotonic() + timeout_seconds
         while time.monotonic() <= deadline:
             call = self.get(call_id)
-            if call.get("result") is not None or call.get("error") is not None:
+            if call["result_status"] != "pending":
                 return call
             time.sleep(interval_seconds)
         raise CalleTimeoutError(f"Timed out waiting for CALL-E call {call_id}.")

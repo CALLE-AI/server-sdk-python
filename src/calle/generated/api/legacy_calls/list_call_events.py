@@ -96,7 +96,7 @@ def sync_detailed(
     cursor: str | Unset = UNSET,
     limit: int | Unset = 50,
 ) -> Response[ErrorEnvelope | EventList]:
-    """List Call Events
+    """List Events
 
      List developer-facing call events.
 
@@ -133,7 +133,7 @@ def sync(
     cursor: str | Unset = UNSET,
     limit: int | Unset = 50,
 ) -> ErrorEnvelope | EventList | None:
-    """List Call Events
+    """List Events
 
      List developer-facing call events.
 
@@ -165,7 +165,7 @@ async def asyncio_detailed(
     cursor: str | Unset = UNSET,
     limit: int | Unset = 50,
 ) -> Response[ErrorEnvelope | EventList]:
-    """List Call Events
+    """List Events
 
      List developer-facing call events.
 
@@ -200,7 +200,7 @@ async def asyncio(
     cursor: str | Unset = UNSET,
     limit: int | Unset = 50,
 ) -> ErrorEnvelope | EventList | None:
-    """List Call Events
+    """List Events
 
      List developer-facing call events.
 

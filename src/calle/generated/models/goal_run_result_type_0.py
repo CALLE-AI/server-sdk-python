@@ -16,7 +16,7 @@ T = TypeVar("T", bound="GoalRunResultType0")
 @_attrs_define
 class GoalRunResultType0:
     """Parsed result validated against the published result schema and durably persisted, or
-    `null` while processing or when the Run has an error. Its keys vary by Goal.
+    `null` while pending, unavailable, not applicable, or on a technical error. Its keys vary by Goal.
 
     """
 

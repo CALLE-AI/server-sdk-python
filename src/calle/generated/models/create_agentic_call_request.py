@@ -8,7 +8,6 @@ from attrs import define as _attrs_define
 from ..types import UNSET, Unset
 
 from typing import cast
-import datetime
 
 if TYPE_CHECKING:
     from ..models.create_agentic_call_request_metadata import (
@@ -24,28 +23,27 @@ T = TypeVar("T", bound="CreateAgenticCallRequest")
 
 @_attrs_define
 class CreateAgenticCallRequest:
-    """One phone, explicit dialing locale and a required Goal-compatible result schema.
+    """One phone, optional region and spoken locale, and a required Goal-compatible result schema.
 
     Attributes:
         task (str):
         phone (str):
-        region (str):
-        locale (str):
         result_schema (CreateAgenticCallRequestResultSchema): Required closed flat JSON Schema using the same
             calle.result.scalar-object.v1 profile as Goal. At most 32 string, boolean, integer or number properties;
             additionalProperties must be false. Nested objects, arrays, null values and schema combinators are unsupported.
-        scheduled_at (datetime.datetime | None | Unset): Reserved draft field. Non-null values currently return
-            scheduling_unavailable; do not use until scheduled authorization is enabled.
+        region (None | str | Unset): Optional destination region. Inferred from the phone when omitted. An explicit
+            region conflicting with the phone requires corrected input.
+        locale (None | str | Unset): Optional spoken BCP-47 locale. Inferred from task intent and available regional
+            languages when omitted.
         metadata (CreateAgenticCallRequestMetadata | Unset):
         webhook_url (None | str | Unset):
     """
 
     task: str
     phone: str
-    region: str
-    locale: str
     result_schema: CreateAgenticCallRequestResultSchema
-    scheduled_at: datetime.datetime | None | Unset = UNSET
+    region: None | str | Unset = UNSET
+    locale: None | str | Unset = UNSET
     metadata: CreateAgenticCallRequestMetadata | Unset = UNSET
     webhook_url: None | str | Unset = UNSET
 
@@ -54,19 +52,19 @@ class CreateAgenticCallRequest:
 
         phone = self.phone
 
-        region = self.region
-
-        locale = self.locale
-
         result_schema = self.result_schema.to_dict()
 
-        scheduled_at: None | str | Unset
-        if isinstance(self.scheduled_at, Unset):
-            scheduled_at = UNSET
-        elif isinstance(self.scheduled_at, datetime.datetime):
-            scheduled_at = self.scheduled_at.isoformat()
+        region: None | str | Unset
+        if isinstance(self.region, Unset):
+            region = UNSET
         else:
-            scheduled_at = self.scheduled_at
+            region = self.region
+
+        locale: None | str | Unset
+        if isinstance(self.locale, Unset):
+            locale = UNSET
+        else:
+            locale = self.locale
 
         metadata: dict[str, Any] | Unset = UNSET
         if not isinstance(self.metadata, Unset):
@@ -84,13 +82,13 @@ class CreateAgenticCallRequest:
             {
                 "task": task,
                 "phone": phone,
-                "region": region,
-                "locale": locale,
                 "result_schema": result_schema,
             }
         )
-        if scheduled_at is not UNSET:
-            field_dict["scheduled_at"] = scheduled_at
+        if region is not UNSET:
+            field_dict["region"] = region
+        if locale is not UNSET:
+            field_dict["locale"] = locale
         if metadata is not UNSET:
             field_dict["metadata"] = metadata
         if webhook_url is not UNSET:
@@ -112,30 +110,27 @@ class CreateAgenticCallRequest:
 
         phone = d.pop("phone")
 
-        region = d.pop("region")
-
-        locale = d.pop("locale")
-
         result_schema = CreateAgenticCallRequestResultSchema.from_dict(
             d.pop("result_schema")
         )
 
-        def _parse_scheduled_at(data: object) -> datetime.datetime | None | Unset:
+        def _parse_region(data: object) -> None | str | Unset:
             if data is None:
                 return data
             if isinstance(data, Unset):
                 return data
-            try:
-                if not isinstance(data, str):
-                    raise TypeError()
-                scheduled_at_type_0 = datetime.datetime.fromisoformat(data)
+            return cast(None | str | Unset, data)
 
-                return scheduled_at_type_0
-            except (TypeError, ValueError, AttributeError, KeyError):
-                pass
-            return cast(datetime.datetime | None | Unset, data)
+        region = _parse_region(d.pop("region", UNSET))
 
-        scheduled_at = _parse_scheduled_at(d.pop("scheduled_at", UNSET))
+        def _parse_locale(data: object) -> None | str | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(None | str | Unset, data)
+
+        locale = _parse_locale(d.pop("locale", UNSET))
 
         _metadata = d.pop("metadata", UNSET)
         metadata: CreateAgenticCallRequestMetadata | Unset
@@ -156,10 +151,9 @@ class CreateAgenticCallRequest:
         create_agentic_call_request = cls(
             task=task,
             phone=phone,
+            result_schema=result_schema,
             region=region,
             locale=locale,
-            result_schema=result_schema,
-            scheduled_at=scheduled_at,
             metadata=metadata,
             webhook_url=webhook_url,
         )

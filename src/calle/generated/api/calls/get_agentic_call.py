@@ -86,7 +86,7 @@ def sync_detailed(
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[AgenticCall | ErrorEnvelope]:
-    """Read a committed Agentic call result
+    """Get Call
 
      Polling reads persisted state and never performs extraction or initiates a call.
 
@@ -117,7 +117,7 @@ def sync(
     *,
     client: AuthenticatedClient | Client,
 ) -> AgenticCall | ErrorEnvelope | None:
-    """Read a committed Agentic call result
+    """Get Call
 
      Polling reads persisted state and never performs extraction or initiates a call.
 
@@ -143,7 +143,7 @@ async def asyncio_detailed(
     *,
     client: AuthenticatedClient | Client,
 ) -> Response[AgenticCall | ErrorEnvelope]:
-    """Read a committed Agentic call result
+    """Get Call
 
      Polling reads persisted state and never performs extraction or initiates a call.
 
@@ -172,7 +172,7 @@ async def asyncio(
     *,
     client: AuthenticatedClient | Client,
 ) -> AgenticCall | ErrorEnvelope | None:
-    """Read a committed Agentic call result
+    """Get Call
 
      Polling reads persisted state and never performs extraction or initiates a call.
 
