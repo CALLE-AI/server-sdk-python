@@ -61,7 +61,7 @@ def main() -> None:
             "request_schema": "#/components/schemas/CreateCallRequest",
             "response_status": "201",
             "response_schema": "#/components/schemas/CallTask",
-            "error_statuses": ["400", "401", "403", "409", "422", "429", "500"],
+            "error_statuses": ["400", "401", "403", "409", "422", "429", "500", "503"],
         },
         {
             "path": "/v1/calls/{call_id}",
@@ -155,7 +155,8 @@ def main() -> None:
         for status in operation["error_statuses"]:
             assert_contract(
                 endpoint.get("responses", {}).get(status, {}).get("$ref")
-                == "#/components/responses/ErrorResponse",
+                == "#/components/responses/ErrorResponse"
+                or response_schema_ref(spec, path, method, status) == "#/components/schemas/ErrorEnvelope",
                 f"missing stable {status} error response for {label}",
             )
 
