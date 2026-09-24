@@ -1,5 +1,7 @@
 from typing import Any
 
+import httpx
+
 
 class CalleAPIError(Exception):
     def __init__(
@@ -36,6 +38,20 @@ class CalleWebhookSignatureError(Exception):
     """Legacy signed-webhook validation error retained for SDK 0.2 compatibility."""
 
     pass
+
+
+def response_payload(response: httpx.Response) -> object:
+    """Decode one API response without leaking JSON implementation errors."""
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        if response.status_code >= 400:
+            raise api_error_from_response(response.status_code, {}) from exc
+        raise CalleConnectionError("CALL-E API returned invalid JSON.") from exc
+
+    if response.status_code >= 400:
+        raise api_error_from_response(response.status_code, payload)
+    return payload
 
 
 def api_error_from_response(status_code: int, payload: object) -> CalleAPIError:

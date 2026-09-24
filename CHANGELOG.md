@@ -24,6 +24,11 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - This is a breaking Calls migration. Retain SDK 0.7.x for historical legacy call-task IDs; see the public migration guide.
 - Clarify webhook configuration, legacy batch-call requirements, and redaction of credentials and private call data.
 
+### Fixed
+
+- Map malformed or non-JSON API responses to the SDK's stable error hierarchy
+  instead of leaking a JSON decoder exception to callers.
+
 ## [0.7.1] - 2026-09-04
 
 ### Added

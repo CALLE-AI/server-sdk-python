@@ -5,7 +5,7 @@ from urllib.parse import quote
 
 import httpx
 
-from calle.errors import CalleConnectionError, CalleTimeoutError, api_error_from_response
+from calle.errors import CalleConnectionError, CalleTimeoutError, response_payload
 
 
 JsonObject = dict[str, Any]
@@ -130,9 +130,7 @@ class CalleGoals:
         except httpx.HTTPError as exc:
             raise CalleConnectionError("CALL-E API request failed before receiving a response.") from exc
 
-        if response.status_code >= 400:
-            raise api_error_from_response(response.status_code, response.json())
-        payload = response.json()
+        payload = response_payload(response)
         if not isinstance(payload, dict):
             raise CalleConnectionError("CALL-E API returned a non-object JSON response.")
         return payload
