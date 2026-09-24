@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `CalleCalls.wait_for_result` keeps polling when GET returns `call_not_ready`
+  instead of treating that documented "not terminal yet" code as a hard failure.
+
 ## [1.0.1] - 2026-09-23
 
 ### Fixed

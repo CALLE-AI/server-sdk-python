@@ -172,6 +172,30 @@ def test_wait_for_result_returns_ordinary_outcome_without_result_or_error(outcom
 
 
 @respx.mock
+def test_wait_for_result_retries_call_not_ready() -> None:
+    route = respx.get("https://api.heycall-e.com/v2/calls/call_123").mock(
+        side_effect=[
+            httpx.Response(
+                409,
+                json={
+                    "error": {
+                        "code": "call_not_ready",
+                        "message": "The call task has not reached a terminal state.",
+                    }
+                },
+            ),
+            httpx.Response(200, json=COMPLETED_CALL),
+        ]
+    )
+    client = CalleClient(api_key="key_test", base_url="https://api.heycall-e.com")
+
+    call = client.calls.wait_for_result("call_123", interval_seconds=0.001, timeout_seconds=0.5)
+
+    assert call["status"] == "completed"
+    assert route.call_count == 2
+
+
+@respx.mock
 def test_wait_for_result_raises_timeout() -> None:
     queued = {**COMPLETED_CALL, "status": "queued", "call_outcome": None, "result_status": "pending", "result": None, "completed_at": None}
     respx.get("https://api.heycall-e.com/v2/calls/call_123").mock(return_value=httpx.Response(200, json=queued))
