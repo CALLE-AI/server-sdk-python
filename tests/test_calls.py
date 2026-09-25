@@ -23,6 +23,8 @@ COMPLETED_CALL = {
     "completed_at": "2026-05-31T00:01:00Z",
 }
 
+RESULT_SCHEMA = {"type": "object", "additionalProperties": False, "properties": {}}
+
 
 @respx.mock
 @pytest.mark.parametrize("call_id", [None, "billing-call-123"])
@@ -103,6 +105,54 @@ def test_create_call_sends_auth_and_idempotency_headers() -> None:
     assert call["result"] == {"completed_count": 1}
     assert call["error"] is None
     assert "structured_result" not in call
+
+
+@respx.mock
+def test_create_call_aliases_phone_on_recipients_list() -> None:
+    route = respx.post("https://api.heycall-e.com/v2/calls").mock(return_value=httpx.Response(200, json=COMPLETED_CALL))
+    client = CalleClient(api_key="key_test", base_url="https://api.heycall-e.com")
+
+    client.calls.create(
+        task="Call.",
+        recipients=[{"phone": "+14155550100", "region": "US", "locale": "en-US"}],
+        idempotency_key="wf_123",
+        result_schema=RESULT_SCHEMA,
+    )
+
+    payload = json.loads(route.calls.last.request.content)
+    assert payload["phone"] == "+14155550100"
+    assert payload["region"] == "US"
+    assert payload["locale"] == "en-US"
+    assert "recipients" not in payload
+
+
+@respx.mock
+def test_create_call_aliases_phone_on_singular_recipient() -> None:
+    route = respx.post("https://api.heycall-e.com/v2/calls").mock(return_value=httpx.Response(200, json=COMPLETED_CALL))
+    client = CalleClient(api_key="key_test", base_url="https://api.heycall-e.com")
+
+    client.calls.create(
+        task="Call.",
+        recipient={"phone": "+14155550100", "region": "US", "locale": "en-US"},
+        idempotency_key="wf_123",
+        result_schema=RESULT_SCHEMA,
+    )
+
+    payload = json.loads(route.calls.last.request.content)
+    assert payload["phone"] == "+14155550100"
+    assert payload["region"] == "US"
+    assert payload["locale"] == "en-US"
+    assert "recipients" not in payload
+
+
+def test_normalize_recipient_aliases_phone_to_phones() -> None:
+    from calle.calls import _normalize_recipient
+
+    assert _normalize_recipient({"phone": "+14155550100", "region": "US", "locale": "en-US"}) == {
+        "phones": ["+14155550100"],
+        "region": "US",
+        "locale": "en-US",
+    }
 
 
 @respx.mock

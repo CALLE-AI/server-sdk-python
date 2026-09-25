@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- `calls.create()` accepts `recipient=` / `recipients=` as an alternative to
+  `phone=`. A `phone` key is aliased to `phones`, and the resolved number is
+  sent as the single `phone` field to `POST /v2/calls`. Passing more than one
+  recipient raises `ValueError`.
+
 ## [1.0.1] - 2026-09-23
 
 ### Fixed

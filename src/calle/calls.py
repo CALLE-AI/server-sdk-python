@@ -18,7 +18,9 @@ class CalleCalls:
         self,
         *,
         task: str,
-        phone: str,
+        phone: str | None = None,
+        recipient: JsonObject | None = None,
+        recipients: list[JsonObject] | None = None,
         region: str | None = None,
         locale: str | None = None,
         idempotency_key: str,
@@ -28,6 +30,24 @@ class CalleCalls:
     ) -> JsonObject:
         if not idempotency_key.strip():
             raise ValueError("A stable idempotency_key is required.")
+        if recipient is not None and recipients is not None:
+            raise ValueError("Pass either recipient or recipients, not both.")
+        if phone is not None and (recipient is not None or recipients is not None):
+            raise ValueError("Pass either phone or recipient/recipients, not both.")
+        if recipient is not None:
+            phone, region, locale = _target_from_recipients(
+                [_normalize_recipient(recipient)],
+                region=region,
+                locale=locale,
+            )
+        elif recipients is not None:
+            phone, region, locale = _target_from_recipients(
+                [_normalize_recipient(item) for item in recipients],
+                region=region,
+                locale=locale,
+            )
+        elif phone is None:
+            raise ValueError("A phone number is required.")
         body = {
             "task": task, "phone": phone, "region": region, "locale": locale,
             "result_schema": result_schema,
@@ -86,6 +106,32 @@ class CalleCalls:
         if not isinstance(payload, dict):
             raise CalleConnectionError("CALL-E API returned a non-object JSON response.")
         return payload
+
+
+def _normalize_recipient(recipient: JsonObject) -> JsonObject:
+    if "phones" in recipient:
+        return recipient
+    phone = recipient.get("phone")
+    normalized = {key: value for key, value in recipient.items() if key != "phone"}
+    normalized["phones"] = [phone] if phone is not None else []
+    return normalized
+
+
+def _target_from_recipients(
+    items: list[JsonObject],
+    *,
+    region: str | None,
+    locale: str | None,
+) -> tuple[str, str | None, str | None]:
+    if len(items) != 1:
+        raise ValueError("The Calls API does not support batch recipients.")
+    item = items[0]
+    phones = item.get("phones") or []
+    if not phones or phones[0] in (None, ""):
+        raise ValueError("A phone number is required.")
+    resolved_region = region if region is not None else item.get("region")
+    resolved_locale = locale if locale is not None else item.get("locale")
+    return str(phones[0]), resolved_region, resolved_locale
 
 
 def _call_path(call_id: str) -> str:
