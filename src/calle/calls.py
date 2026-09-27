@@ -5,6 +5,7 @@ from urllib.parse import quote
 import httpx
 
 from calle.errors import CalleConnectionError, CalleTimeoutError, api_error_from_response
+from calle.goals import _validate_polling_seconds
 
 
 JsonObject = dict[str, Any]
@@ -54,6 +55,8 @@ class CalleCalls:
         interval_seconds: float = 2.0,
         timeout_seconds: float = 600.0,
     ) -> JsonObject:
+        _validate_polling_seconds(interval_seconds, "interval_seconds")
+        _validate_polling_seconds(timeout_seconds, "timeout_seconds")
         deadline = time.monotonic() + timeout_seconds
         while time.monotonic() <= deadline:
             call = self.get(call_id)
@@ -65,6 +68,8 @@ class CalleCalls:
     def create_and_wait(self, **kwargs: Any) -> JsonObject:
         interval_seconds = float(kwargs.pop("interval_seconds", 2.0))
         timeout_seconds = float(kwargs.pop("timeout_seconds", 600.0))
+        _validate_polling_seconds(interval_seconds, "interval_seconds")
+        _validate_polling_seconds(timeout_seconds, "timeout_seconds")
         call = self.create(**kwargs)
         return self.wait_for_result(
             str(call["id"]),

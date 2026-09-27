@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Validate `interval_seconds` and `timeout_seconds` in `calls.wait_for_result` and
+  `calls.create_and_wait` the same way the Goal Run helpers do. Zero, negative,
+  NaN and infinite values now raise a `ValueError` naming the argument, and
+  `create_and_wait` raises before the create request is sent.
+
 ## [1.0.1] - 2026-09-23
 
 ### Fixed
