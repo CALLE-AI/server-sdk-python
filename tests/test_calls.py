@@ -215,3 +215,59 @@ def test_call_id_stays_in_one_url_path_segment() -> None:
     encoded_id = "%2E%2E%2Fgoals%3Fadmin%3D1%23fragment%252F"
     assert requests[0].url.raw_path == f"/v2/calls/{encoded_id}".encode()
     assert requests[1].url.raw_path == f"/v2/calls/{encoded_id}/events".encode()
+
+
+INVALID_POLLING_SECONDS = [
+    ("interval_seconds", 0.0),
+    ("interval_seconds", -1.0),
+    ("interval_seconds", float("nan")),
+    ("interval_seconds", float("inf")),
+    ("timeout_seconds", 0.0),
+    ("timeout_seconds", -1.0),
+    ("timeout_seconds", float("nan")),
+    ("timeout_seconds", float("inf")),
+]
+
+
+@pytest.mark.parametrize(("parameter", "value"), INVALID_POLLING_SECONDS)
+@respx.mock
+def test_wait_for_result_rejects_invalid_polling_seconds_without_request(
+    parameter: str,
+    value: float,
+) -> None:
+    route = respx.get("https://api.heycall-e.com/v2/calls/call_123").mock(
+        return_value=httpx.Response(200, json=COMPLETED_CALL)
+    )
+    client = CalleClient(api_key="key_test")
+    options = {"interval_seconds": 1.0, "timeout_seconds": 1.0}
+    options[parameter] = value
+
+    with pytest.raises(ValueError, match=f"{parameter} must be a finite positive number"):
+        client.calls.wait_for_result("call_123", **options)
+
+    assert route.call_count == 0
+
+
+@pytest.mark.parametrize(("parameter", "value"), INVALID_POLLING_SECONDS)
+@respx.mock
+def test_create_and_wait_rejects_invalid_polling_seconds_before_create(
+    parameter: str,
+    value: float,
+) -> None:
+    route = respx.post("https://api.heycall-e.com/v2/calls").mock(
+        return_value=httpx.Response(201, json=COMPLETED_CALL)
+    )
+    client = CalleClient(api_key="key_test")
+    options = {"interval_seconds": 1.0, "timeout_seconds": 1.0}
+    options[parameter] = value
+
+    with pytest.raises(ValueError, match=f"{parameter} must be a finite positive number"):
+        client.calls.create_and_wait(
+            task="Call.",
+            phone="+14155550100",
+            idempotency_key="call:test:v1",
+            result_schema={"type": "object", "properties": {}, "additionalProperties": False},
+            **options,
+        )
+
+    assert route.call_count == 0
