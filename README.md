@@ -121,6 +121,21 @@ Run the create-and-wait example from a local checkout:
 uv run python examples/create_and_wait.py
 ```
 
+If polling fails after creation, the example prints a command to resume the
+existing Call. Keep the same API key and base URL, and pass that Call's ID:
+
+```bash
+uv run python examples/create_and_wait.py --call-id call_123
+```
+
+This mode only reads the existing Call; it does not create another. Calls
+polling errors (`CalleAPIError`, `CalleConnectionError`, and `CalleTimeoutError`)
+expose `error.call_id`, which is the Call's API `id`, not its Billing `call_id`.
+This recovery support is available in this checkout and is not in the published
+`1.0.1` package. If creation fails before an ID is received, `error.call_id` is
+`None`; that does not prove no Call was created. Retry with the original request
+and idempotency key rather than starting a replacement Call.
+
 Run a published Goal with an explicit Goal, phone, variables, and durable
 idempotency key:
 

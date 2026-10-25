@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+
+- Preserve the API Call ID on SDK errors raised while waiting for a call result,
+  so callers can resume querying the same call after a connection failure, API
+  error, or timeout. The create-and-wait example accepts `--call-id` to resume.
+
 ## [1.0.1] - 2026-09-23
 
 ### Fixed
