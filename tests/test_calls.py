@@ -5,7 +5,13 @@ import pytest
 import respx
 
 from calle import CalleClient
-from calle.errors import CalleAPIError, CalleTimeoutError
+from calle.errors import (
+    CalleAPIError,
+    CalleAuthenticationError,
+    CalleConnectionError,
+    CalleRateLimitError,
+    CalleTimeoutError,
+)
 
 
 COMPLETED_CALL = {
@@ -179,6 +185,111 @@ def test_wait_for_result_raises_timeout() -> None:
 
     with pytest.raises(CalleTimeoutError):
         client.calls.wait_for_result("call_123", interval_seconds=0.001, timeout_seconds=0.002)
+
+
+@pytest.mark.parametrize("create_first", [True, False])
+@pytest.mark.parametrize("failure, error_type", [
+    (httpx.ConnectError("Connection lost."), CalleConnectionError),
+    (httpx.ReadTimeout("Read timed out."), CalleTimeoutError),
+    (502, CalleAPIError),
+    (401, CalleAuthenticationError),
+    (429, CalleRateLimitError),
+])
+@respx.mock
+def test_wait_errors_preserve_api_call_id_and_allow_recovery(create_first, failure, error_type) -> None:
+    create = respx.post("https://api.heycall-e.com/v2/calls").mock(
+        return_value=httpx.Response(202, json=COMPLETED_CALL)
+    )
+    error_body = {"error": {"code": "test_error", "message": "Query failed.", "details": {"retry": "later"}}}
+    query_failure = httpx.Response(failure, json=error_body) if isinstance(failure, int) else failure
+    query = respx.get("https://api.heycall-e.com/v2/calls/call_123").mock(
+        side_effect=[query_failure, httpx.Response(200, json=COMPLETED_CALL)]
+    )
+    with CalleClient(api_key="test") as client:
+        with pytest.raises(error_type) as exc_info:
+            if create_first:
+                client.calls.create_and_wait(
+                    task="Call.", phone="+14155550100", idempotency_key="wf_123",
+                    result_schema={"type": "object", "additionalProperties": False, "properties": {}},
+                )
+            else:
+                client.calls.wait_for_result("call_123")
+        error = exc_info.value
+        assert type(error) is error_type
+        assert error.call_id == COMPLETED_CALL["id"]
+        assert error.call_id != COMPLETED_CALL["call_id"]
+        if isinstance(failure, int):
+            assert error.status_code == failure
+            assert error.code == "test_error"
+            assert error.details == {"retry": "later"}
+            assert str(error) == "Query failed."
+        else:
+            assert error.__cause__ is failure
+        assert client.calls.wait_for_result(error.call_id) == COMPLETED_CALL
+    assert create.call_count == int(create_first)
+    assert query.call_count == 2
+
+
+@pytest.mark.parametrize("create_first", [True, False])
+@respx.mock
+def test_wait_deadline_preserves_api_call_id(create_first, monkeypatch) -> None:
+    ticks = iter([0.0, 0.0, 2.0])
+    monkeypatch.setattr("calle.calls.time.monotonic", lambda: next(ticks))
+    monkeypatch.setattr("calle.calls.time.sleep", lambda _: None)
+    create = respx.post("https://api.heycall-e.com/v2/calls").mock(
+        return_value=httpx.Response(202, json=COMPLETED_CALL)
+    )
+    query = respx.get("https://api.heycall-e.com/v2/calls/call_123").mock(
+        return_value=httpx.Response(200, json={**COMPLETED_CALL, "result_status": "pending", "result": None})
+    )
+    with CalleClient(api_key="test") as client, pytest.raises(CalleTimeoutError) as exc_info:
+        if create_first:
+            client.calls.create_and_wait(
+                task="Call.", phone="+14155550100", idempotency_key="wf_123",
+                result_schema={"type": "object", "additionalProperties": False, "properties": {}},
+                timeout_seconds=1,
+            )
+        else:
+            client.calls.wait_for_result("call_123", timeout_seconds=1)
+    assert exc_info.value.call_id == "call_123"
+    assert str(exc_info.value) == "Timed out waiting for CALL-E call call_123."
+    assert create.call_count == int(create_first)
+    assert query.call_count == 1
+
+
+@pytest.mark.parametrize("failure, error_type", [
+    (httpx.ConnectError("Connection lost."), CalleConnectionError),
+    (httpx.ReadTimeout("Read timed out."), CalleTimeoutError),
+    (502, CalleAPIError),
+])
+@respx.mock
+def test_create_failure_does_not_claim_a_call_id(failure, error_type) -> None:
+    response = httpx.Response(failure, json={"error": {"code": "test_error", "message": "Create failed."}}) if isinstance(failure, int) else failure
+    create = respx.post("https://api.heycall-e.com/v2/calls").mock(side_effect=[response])
+    with CalleClient(api_key="test") as client, pytest.raises(error_type) as exc_info:
+        client.calls.create_and_wait(
+            task="Call.", phone="+14155550100", idempotency_key="wf_123",
+            result_schema={"type": "object", "additionalProperties": False, "properties": {}},
+        )
+    assert exc_info.value.call_id is None
+    assert create.call_count == 1
+    assert len(respx.calls) == 1
+
+
+@respx.mock
+def test_create_and_wait_returns_result() -> None:
+    create = respx.post("https://api.heycall-e.com/v2/calls").mock(
+        return_value=httpx.Response(202, json=COMPLETED_CALL)
+    )
+    query = respx.get("https://api.heycall-e.com/v2/calls/call_123").mock(
+        return_value=httpx.Response(200, json=COMPLETED_CALL)
+    )
+    with CalleClient(api_key="test") as client:
+        assert client.calls.create_and_wait(
+            task="Call.", phone="+14155550100", idempotency_key="wf_123",
+            result_schema={"type": "object", "additionalProperties": False, "properties": {}},
+        ) == COMPLETED_CALL
+    assert create.call_count == query.call_count == 1
 
 
 def test_generated_call_round_trips_goal_compatible_result() -> None:

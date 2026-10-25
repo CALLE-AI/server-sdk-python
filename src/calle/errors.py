@@ -2,6 +2,8 @@ from typing import Any
 
 
 class CalleAPIError(Exception):
+    call_id: str | None = None
+
     def __init__(
         self,
         *,
@@ -25,11 +27,11 @@ class CalleRateLimitError(CalleAPIError):
 
 
 class CalleTimeoutError(Exception):
-    pass
+    call_id: str | None = None
 
 
 class CalleConnectionError(Exception):
-    pass
+    call_id: str | None = None
 
 
 class CalleWebhookSignatureError(Exception):

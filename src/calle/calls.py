@@ -4,7 +4,7 @@ from urllib.parse import quote
 
 import httpx
 
-from calle.errors import CalleConnectionError, CalleTimeoutError, api_error_from_response
+from calle.errors import CalleAPIError, CalleConnectionError, CalleTimeoutError, api_error_from_response
 
 
 JsonObject = dict[str, Any]
@@ -54,13 +54,17 @@ class CalleCalls:
         interval_seconds: float = 2.0,
         timeout_seconds: float = 600.0,
     ) -> JsonObject:
-        deadline = time.monotonic() + timeout_seconds
-        while time.monotonic() <= deadline:
-            call = self.get(call_id)
-            if call["result_status"] != "pending":
-                return call
-            time.sleep(interval_seconds)
-        raise CalleTimeoutError(f"Timed out waiting for CALL-E call {call_id}.")
+        try:
+            deadline = time.monotonic() + timeout_seconds
+            while time.monotonic() <= deadline:
+                call = self.get(call_id)
+                if call["result_status"] != "pending":
+                    return call
+                time.sleep(interval_seconds)
+            raise CalleTimeoutError(f"Timed out waiting for CALL-E call {call_id}.")
+        except (CalleAPIError, CalleConnectionError, CalleTimeoutError) as error:
+            error.call_id = call_id
+            raise
 
     def create_and_wait(self, **kwargs: Any) -> JsonObject:
         interval_seconds = float(kwargs.pop("interval_seconds", 2.0))
